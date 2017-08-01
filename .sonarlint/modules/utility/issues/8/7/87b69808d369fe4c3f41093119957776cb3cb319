@@ -1,0 +1,7 @@
+
+squid:S1488å"_Immediately return this expression instead of assigning it to the temporary variable "strDate".(÷ŠÏHõARMINORZ
+CODE_SMELL
+squid:S1488ñ"_Immediately return this expression instead of assigning it to the temporary variable "strDate".(÷ŠÏHöARMINORZ
+CODE_SMELL
+tsquid:S1126§"AReplace this if-then-else statement by a single return statement.(ş×²²øÿÿÿÿHôARMINORZ
+CODE_SMELL

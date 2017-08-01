@@ -1,0 +1,69 @@
+package com.wanderer.utility.appservices.serializer;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.wanderer.utility.beans.CustomerSecurityBean;
+import com.wanderer.utility.constants.AppConstants;
+
+/**
+ * 
+ * @author anupam.babar
+ */
+public class UserAuthenticationSerializer extends JsonDeserializer<CustomerSecurityBean> {
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * com.fasterxml.jackson.databind.JsonDeserializer#deserialize(com.fasterxml
+	 * .jackson.core.JsonParser,
+	 * com.fasterxml.jackson.databind.DeserializationContext)
+	 */
+	@Override
+	public CustomerSecurityBean deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+
+		CustomerSecurityBean userBean = new CustomerSecurityBean();
+
+		ObjectCodec oc = jsonParser.getCodec();
+		JsonNode node = oc.readTree(jsonParser);
+		if (node.get(AppConstants.UAAS_USERNAME) != null) {
+			userBean.setUsername(node.get(AppConstants.UAAS_USERNAME).asText());
+		}
+		if (node.get(AppConstants.UAAS_PASSWORD) != null) {
+			userBean.setPassword(node.get(AppConstants.UAAS_PASSWORD).asText());
+		}
+		if (node.get(AppConstants.UAAS_ENABLED) != null) {
+			userBean.setEnabled(node.get(AppConstants.UAAS_ENABLED).booleanValue());
+		}
+		if (node.get(AppConstants.UAAS_ACCOUNTNOTEXPIRED) != null) {
+			userBean.setAccountNonExpired(node.get(AppConstants.UAAS_ACCOUNTNOTEXPIRED).booleanValue());
+		}
+		if (node.get(AppConstants.UAAS_ACCOUNTNOTLOCKED) != null) {
+			userBean.setAccountNonLocked(node.get(AppConstants.UAAS_ACCOUNTNOTLOCKED).booleanValue());
+		}
+		if (node.get(AppConstants.UAAS_CREDENTIALSNOTEXPIRED) != null) {
+			userBean.setCredentialsNonExpired(node.get(AppConstants.UAAS_CREDENTIALSNOTEXPIRED).booleanValue());
+		}
+
+		Iterator<JsonNode> elements = node.get(AppConstants.UAAS_AUTHORITIES).elements();
+		List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+		userBean.setAuthorities(authorities);
+		while (elements.hasNext()) {
+			JsonNode next = elements.next();
+			JsonNode authority = next.get(AppConstants.UAAS_AUTHORITY);
+			userBean.getAuthorities().add(new SimpleGrantedAuthority(authority.asText()));
+		}
+		return userBean;
+	}
+}

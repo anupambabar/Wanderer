@@ -1,0 +1,58 @@
+/**
+ * 
+ */
+package com.wanderer.utility.appservices.crypto;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * @author anupam babar
+ *
+ */
+public class CryptoServiceProvider {
+
+	private int keySize;
+	private int iterationCount;
+	private Cipher cipher;
+
+	private static final Logger logger = LoggerFactory.getLogger(CryptoServiceProvider.class);
+
+	public CryptoServiceProvider(int keySize, int EncryptorDecryptor) {
+		super();
+		this.keySize = keySize;
+		this.iterationCount = iterationCount;
+		try {
+			cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public String decrypt(String salt, String iv, String passphrase, String EncryptedText) {
+		String decryptedValue = null;
+		try {
+			byte[] saltBytes = hexStringToByteArray(salt);
+			SecretKeySpec sKey = (SecretKeySpec) generateKeyFromPassword(passphrase, saltBytes);
+			byte[] ivBytes = hexStringToByteArray(iv);
+			IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
+			cipher.init(Cipher.DECRYPT_MODE, sKey, ivParameterSpec);
+			byte[] decordedValue = new BASE64Decoder().decodeBuffer(EncryptedText);
+			byte[] decValue = cipher.doFinal(decordedValue);
+			decryptedValue = new String(decValue);
+			// return decryptedValue;
+		} catch (Exception e) {
+			logger.error("ERROR IN: decrypt");
+		}
+		return decryptedValue;
+
+	}
+}

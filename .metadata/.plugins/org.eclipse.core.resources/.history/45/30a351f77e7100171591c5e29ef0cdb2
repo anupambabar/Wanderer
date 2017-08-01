@@ -1,0 +1,13 @@
+/**
+ * 
+ */
+package com.wanderer.utility.appservices.interfaces;
+
+/**
+ * @author anupam babar
+ *
+ */
+public interface JSONRequestProcessor {
+
+	public String processRequest(String action, String subAction, Object inputParam);
+}

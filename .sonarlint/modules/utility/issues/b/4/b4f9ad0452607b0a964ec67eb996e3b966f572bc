@@ -1,0 +1,6 @@
+
+’squid:S1450%"`Remove the "requestActionBean" field and declare it as a local variable in the relevant methods.(¼ñ£…ùÿÿÿÿHæFRMINORZ
+CODE_SMELL
+squid:S2293F"YReplace the type specification in this constructor call with the diamond operator ("<>").(Û¨°«8È£¥¯Ø+HÇXRMINORZ
+CODE_SMELL
+psquid:S2583™"DChange this condition so that it does not always evaluate to "false"(–äÌÍûÿÿÿÿHèFRMAJORZBUG

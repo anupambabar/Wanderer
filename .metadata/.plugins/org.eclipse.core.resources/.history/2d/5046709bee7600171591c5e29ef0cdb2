@@ -1,0 +1,18 @@
+#WANDERER DEV
+request_url_web=http://172.16.113.70:7070/DF-Middleware/request/web
+request_url_mobile=http://172.16.113.70:7070/DF-Middleware/request/mobile
+request_url_jms_web=http://172.16.113.70:7070/DF-Middleware/request/web/jms/getResponse
+request_url_jms_mobile=http://172.16.113.70:7070/DF-Middleware/request/mobile/jms/getResponse
+jms_provider_url=remote://172.16.113.70:4447
+
+#Datasource JNDI Name
+datasource_jndi_name=java:jboss/datasources/DF_DM_ORACLEDS
+datasource_schema_owner=USRDM
+core_persistence_unit=CORE
+
+#Push Notification Configuration
+pushNotification_url=http://172.16.102.70:8444/TestNotification/Push
+apiKey=AIzaSyB52L9xUm5LbYxviuMmbNYYSz4s4vztj34
+envType=dev
+certificateName=DubaiFirstKeyCertificates.p12
+certificatePassword=123456789

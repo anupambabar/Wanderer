@@ -1,0 +1,67 @@
+package com.wanderer.utility.utils;
+
+import java.net.PasswordAuthentication;
+import java.util.Properties;
+
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import org.hibernate.Session;
+import org.jboss.logging.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.wanderer.utility.constants.AppConstants;
+
+/**
+ * @author anupam.babar
+ *
+ */
+public class EmailUtil {
+
+	private static final Logger logger = LoggerFactory.getLogger(EmailUtil.class);
+	
+	private EmailUtil(){
+	}
+
+	/**
+	 * @param toEmail
+	 * @param subject
+	 * @param body
+	 * @return
+	 */
+	public static String setUpandSendEmail(String toEmail, String subject, String body) {
+
+		try {
+			Properties props = PropertyReaderUtil.getInstance().getProperties();
+
+			props.put("mail.smtp.auth", PropertyReaderUtil.getInstance().getValue(AppConstants.EMAIL_SMTP_AUTH));
+			props.put("mail.smtp.starttls.enable", PropertyReaderUtil.getInstance().getValue(AppConstants.EMAIL_SMTP_STARTTLS_ENABLE));
+			props.put("mail.smtp.host", PropertyReaderUtil.getInstance().getValue(AppConstants.EMAIL_SMTP_SERVER));
+			props.put("mail.smtp.port", PropertyReaderUtil.getInstance().getValue(AppConstants.EMAIL_SMTP_SERVER_PORT));
+			props.put("mail.smtp.starttls.enable", PropertyReaderUtil.getInstance().getValue(AppConstants.EMAIL_SMTP_STARTTLS_ENABLE));
+
+			/*Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+				protected PasswordAuthentication getPasswordAuthentication() {
+					return new PasswordAuthentication(PropertyReaderUtil.getInstance().getValue(AppConstants.EMAIL_SERVER_USERNAME),
+							PropertyReaderUtil.getInstance().getValue(AppConstants.EMAIL_SERVER_PASSWORD));
+				}
+			});
+
+			Message message = new MimeMessage(session);
+			message.setFrom(new InternetAddress(PropertyReaderUtil.getInstance().getValue(AppConstants.EMAIL_SERVER_FROM_ADDRESS)));
+			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+			message.setSubject(subject);
+			message.setText(body);
+
+			Transport.send(message);*/
+
+		} catch (Exception e) {
+			logger.error("Exception Occured while setting up Email :: ", e);
+		}
+		return "00";
+
+	}
+
+}

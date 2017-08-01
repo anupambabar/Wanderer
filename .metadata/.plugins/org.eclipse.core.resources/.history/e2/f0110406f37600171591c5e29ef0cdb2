@@ -1,0 +1,503 @@
+package com.wanderer.core.controller;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Query;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.HandlerMapping;
+
+import com.wanderer.core.entity.ActivityEntity;
+import com.wanderer.core.entity.TransactionLogEntity;
+import com.wanderer.core.entity.UserEntity;
+import com.wanderer.core.entity.UserSessionEntity;
+import com.wanderer.core.jms.JMSMessageSender;
+import com.wanderer.utility.appservices.dbconnector.JPAProvider;
+import com.wanderer.utility.constants.AppConstants;
+import com.wanderer.utility.utils.CryptoUtil;
+import com.wanderer.utility.utils.DateUtil;
+import com.wanderer.utility.utils.JsonUtil;
+import com.wanderer.utility.utils.ObjectUtil;
+
+/**
+ * @author anupam.babar
+ *
+ */
+@Controller
+@RequestMapping("/")
+public class RequestMapper {
+
+	private static final Logger logger = LoggerFactory.getLogger(RequestMapper.class);
+
+	@Autowired
+	JMSMessageSender jmsMessageSender;
+
+	/**
+	 * 
+	 * @param request
+	 * @param response
+	 */
+	@RequestMapping(value = "request/**", method = RequestMethod.POST)
+	public void processRequest(HttpServletRequest request, HttpServletResponse response) {
+
+		StringBuilder stringBuilder = new StringBuilder();
+		String responseJSON = "";
+
+		String requestURL = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+		String requestKey = requestURL.substring(requestURL.lastIndexOf('/') + 1);
+
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(request.getInputStream()));
+			String line;
+			while ((line = in.readLine()) != null) {
+				stringBuilder.append(line);
+			}
+			JSONParser jParser = new JSONParser();
+			JSONObject reqObj = (JSONObject) jParser.parse(stringBuilder.toString());
+			responseJSON = getResponse(reqObj, requestKey, stringBuilder.toString());
+			response.getWriter().write(responseJSON);
+			in.close();
+		} catch (Exception e) {
+			logger.error("Exception in RequestMapper.processRequest() : ", e);
+		}
+	}
+
+	/**
+	 * @return
+	 */
+	private TransactionLogEntity getNewTransactionLogEntity(int userId, int activityId, String requestKey, String inputParam, String stage,
+			String transactionStatus) {
+
+		TransactionLogEntity transactionLogEntity = new TransactionLogEntity();
+
+		transactionLogEntity.setActivityId(activityId);
+		transactionLogEntity.setUserId(userId);
+		transactionLogEntity.setRequestDateTime(DateUtil.getCurrentTimestamp());
+		transactionLogEntity.setTransactionStatus(transactionStatus);
+		if (requestKey.equalsIgnoreCase(AppConstants.REQUEST_KEY_WEB_LOGIN)) {
+			transactionLogEntity.setChannelId(1);
+		} else if (requestKey.equalsIgnoreCase(AppConstants.REQUEST_KEY_MOBILE_LOGIN)) {
+			transactionLogEntity.setChannelId(2);
+		} else {
+			transactionLogEntity.setChannelId(3);
+		}
+		transactionLogEntity.setStage(stage);
+		transactionLogEntity.setRequest(inputParam);
+		transactionLogEntity.setCreatedBy(1);
+		transactionLogEntity.setCreatedOn(DateUtil.getCurrentTimestamp());
+		transactionLogEntity.setIsActive('Y');
+
+		return transactionLogEntity;
+	}
+
+	/**
+	 * @param reqObj
+	 * @return
+	 */
+	private String getResponse(JSONObject reqObj, String requestKey, String stringBuilder) {
+
+		String response = null;
+
+		String action = (String) reqObj.get(AppConstants.ACTION);
+		String subAction = (String) reqObj.get(AppConstants.SUBACTION);
+		String inputParam = reqObj.get(AppConstants.INPUT_PARAM).toString();
+
+		// logger.info("inputParam before : " + inputParam);
+		inputParam = getDecryptedInputParamString(inputParam);
+		// logger.info("inputParam after : " + inputParam);
+
+		if (null != inputParam) {
+			String requestAction = JsonUtil.getRequestAction(inputParam);
+			int userId = JsonUtil.getUserId(inputParam);
+			int activityId = JsonUtil.getActivityId(inputParam);
+
+			TransactionLogEntity transactionLogEntity = getNewTransactionLogEntity(userId, activityId, requestKey, inputParam, requestAction,
+					AppConstants.TRANSACTION_STATUS_PENDING);
+
+			logRequest(transactionLogEntity);
+
+			TransactionLogEntity delegateLogEntity = (TransactionLogEntity) ObjectUtil.cloneObject(transactionLogEntity);
+			TransactionLogEntity responseLogEntity = (TransactionLogEntity) ObjectUtil.cloneObject(transactionLogEntity);
+
+			if ((reqObj.containsKey(AppConstants.ACTION)) && (reqObj.containsKey(AppConstants.SUBACTION))
+					&& (reqObj.containsKey(AppConstants.INPUT_PARAM))) {
+
+				String strStatus = checkProcessingIdStatus(requestAction, inputParam);
+				if (("Y").equalsIgnoreCase(strStatus)) {
+					response = (new JSONRequestProcessor()).processRequest(action, subAction, inputParam, delegateLogEntity);
+					if (null != response) {
+						responseLogEntity.setTransactionStatus(AppConstants.TRANSACTION_STATUS_SUCCESS);
+						response = getEncryptedResponseString(response, inputParam);
+					} else {
+						responseLogEntity.setTransactionStatus(AppConstants.TRANSACTION_STATUS_FAILURE);
+					}
+					responseLogEntity.setRequestDateTime(DateUtil.getCurrentTimestamp());
+				} else if (("S").equalsIgnoreCase(strStatus)) {
+					response = getSessionIdNotActiveResponse();
+					responseLogEntity.setTransactionStatus(AppConstants.TRANSACTION_STATUS_FAILURE);
+				} else if (("B").equalsIgnoreCase(strStatus)) {
+					response = getMaxRequestReachedResponse();
+					responseLogEntity.setTransactionStatus(AppConstants.TRANSACTION_STATUS_FAILURE);
+				} else {
+					response = getProcessingIdNotActiveResponse();
+					responseLogEntity.setTransactionStatus(AppConstants.TRANSACTION_STATUS_FAILURE);
+				}
+
+				responseLogEntity.setRequestDateTime(DateUtil.getCurrentTimestamp());
+				responseLogEntity.setResponseDateTime(DateUtil.getCurrentTimestamp());
+				responseLogEntity.setResponse(response);
+
+			}
+
+			responseLogEntity.setTransactionStatus(AppConstants.TRANSACTION_STATUS_SUCCESS);
+			responseLogEntity.setStage(AppConstants.RESPONSE_STAGE_MIDDLEWARE_REQUESTMAPPER);
+			logResponse(responseLogEntity.getRrn(), response, responseLogEntity.getTransactionStatus());
+		} else {
+			response = getSessionIdNotActiveResponse();
+		}
+
+		return response;
+	}
+
+	/**
+	 * @param response
+	 * @param inputParam
+	 * @return
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private String getEncryptedResponseString(String response, String inputParam) {
+
+		String encyrptedData = null;
+		Map<String, String> encyrptedMap = new HashMap<String, String>();
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+		Map<String, String> decyrptedMap = new HashMap<String, String>();
+		UserSessionEntity sessionsEntity = new UserSessionEntity();
+		try {
+
+			Map<String, String> inputParamMap = (Map) JsonUtil.getObject(inputParam, HashMap.class);
+			String encrypted = inputParamMap.get(AppConstants.REQUEST_KEY_ENCRYPTED);
+			String encryptedStatic = inputParamMap.get(AppConstants.REQUEST_KEY_STATIC_SESSIONID);
+
+			String sessionToken = inputParamMap.get(AppConstants.REQUEST_KEY_SESSIONID);
+
+			if (null != encryptedStatic && "Y".equalsIgnoreCase(encryptedStatic)) {
+
+				responseMap = (Map) JsonUtil.getObject(response, HashMap.class);
+				decyrptedMap = (Map) responseMap.get(AppConstants.OUTPUT_PARAM);
+
+				for (Map.Entry<String, String> entry : decyrptedMap.entrySet()) {
+					String val = JsonUtil.getJSONString(entry.getValue());
+					if (!val.contains("[") && !val.contains("{")) {
+						val = val.replaceAll("\"", "");
+					}
+					if (!entry.getKey().equalsIgnoreCase(AppConstants.RESPONSE_KEY_STATUS)) {
+						encyrptedMap.put(entry.getKey(), CryptoUtil.encryptNonAndroid(val, "Ar#20Rm$1@Va^6"));
+					} else {
+						encyrptedMap.put(entry.getKey(), entry.getValue());
+					}
+				}
+				encyrptedMap.put(AppConstants.REQUEST_KEY_STATIC_SESSIONID, AppConstants.STATUS_DEFAULT_ACTIVE);
+				responseMap.put(AppConstants.OUTPUT_PARAM, JsonUtil.getJSONString(encyrptedMap));
+
+				encyrptedData = JsonUtil.getJSONString(responseMap);
+			} else if (null != encrypted && "Y".equalsIgnoreCase(encrypted)) {
+
+				responseMap = (Map) JsonUtil.getObject(response, HashMap.class);
+				decyrptedMap = (Map) responseMap.get(AppConstants.OUTPUT_PARAM);
+
+				if (decyrptedMap.get(AppConstants.REQUEST_KEY_REQUESTACTION).equalsIgnoreCase("MobilelogOut")) {
+					sessionsEntity.setSessionToken(inputParamMap.get(AppConstants.REQUEST_KEY_SESSIONID));
+				} else {
+					if (sessionToken.contains("~~~")) {
+						sessionsEntity = getUserSessionDetails(Integer.parseInt(decyrptedMap.get(AppConstants.REQUEST_KEY_USERID)),
+								Integer.parseInt(decyrptedMap.get(AppConstants.REQUEST_KEY_CHANNELID)));
+						sessionToken = sessionsEntity.getSessionToken();
+					}
+				}
+
+				for (Map.Entry<String, String> entry : decyrptedMap.entrySet()) {
+					String val = JsonUtil.getJSONString(entry.getValue());
+
+					if (entry.getKey().equalsIgnoreCase(AppConstants.RESPONSE_KEY_STATUS)
+							|| entry.getKey().equalsIgnoreCase(AppConstants.RESPONSE_KEY_RESULT)
+							|| entry.getKey().equalsIgnoreCase(AppConstants.REQUEST_KEY_REQUESTACTION)) {
+						val = val.replaceAll("\"", "");
+					}
+					encyrptedMap.put(entry.getKey(), entry.getValue());
+				}
+				encyrptedMap.put(AppConstants.REQUEST_KEY_ENCRYPTED, AppConstants.STATUS_DEFAULT_ACTIVE);
+				responseMap.put(AppConstants.OUTPUT_PARAM, JsonUtil.getJSONString(encyrptedMap));
+
+				encyrptedData = JsonUtil.getJSONString(responseMap);
+
+			} else {
+				encyrptedData = response;
+			}
+
+		} catch (Exception e) {
+			logger.error("Exception in getEncryptedResponseString() : ", e);
+		}
+
+		return encyrptedData;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private String getDecryptedInputParamString(String inputParam) {
+
+		String deviceId = null;
+		String decyrptedData = null;
+		try {
+			Map<String, String> encyrptedMap = new HashMap<String, String>();
+			Map<String, String> decyrptedMap = new HashMap<String, String>();
+			encyrptedMap = (Map) JsonUtil.getObject(inputParam, HashMap.class);
+
+			if (encyrptedMap.containsKey(AppConstants.REQUEST_KEY_SESSIONID)) {
+				String sessionToken = encyrptedMap.get(AppConstants.REQUEST_KEY_SESSIONID);
+				UserSessionEntity sessionsEntity = getUserSessionDetails(Integer.parseInt(encyrptedMap.get(AppConstants.REQUEST_KEY_USERID)),
+						Integer.parseInt(encyrptedMap.get(AppConstants.REQUEST_KEY_CHANNELID)));
+				if (sessionToken.contains("~~~"))
+					sessionToken = sessionsEntity.getSessionToken();
+
+				for (Map.Entry<String, String> entry : encyrptedMap.entrySet()) {
+					if (entry.getValue().contains("~~~")) {
+						decyrptedMap.put(entry.getKey(), CryptoUtil.decryptNonAndroid(entry.getValue(), sessionToken));
+					} else {
+						decyrptedMap.put(entry.getKey(), entry.getValue());
+					}
+				}
+				decyrptedMap.put(AppConstants.REQUEST_KEY_ENCRYPTED, AppConstants.STATUS_DEFAULT_ACTIVE);
+				decyrptedData = JsonUtil.getJSONString(decyrptedMap);
+			} else if (encyrptedMap.containsKey(AppConstants.REQUEST_KEY_STATIC_SESSIONID)) {
+				for (Map.Entry<String, String> entry : encyrptedMap.entrySet()) {
+					if (entry.getValue().contains("~~~")) {
+						if (!entry.getKey().equalsIgnoreCase(AppConstants.REQUEST_KEY_STATIC_SESSIONID)) {
+							decyrptedMap.put(entry.getKey(), CryptoUtil.decryptNonAndroid(entry.getValue(), "Ar#20Rm$1@Va^6"));
+						} else {
+							decyrptedMap.put(entry.getKey(), entry.getValue());
+						}
+					} else {
+						decyrptedMap.put(entry.getKey(), entry.getValue());
+					}
+				}
+				decyrptedData = JsonUtil.getJSONString(decyrptedMap);
+			} else {
+				decyrptedData = inputParam;
+			}
+
+		} catch (Exception e) {
+			logger.error("Exception in getDecryptedInputParamString() : ", e);
+		}
+
+		return decyrptedData;
+	}
+
+	@SuppressWarnings("unchecked")
+	private String checkProcessingIdStatus(String requestAction, String inputParam) {
+
+		UserSessionEntity UserSessionEntity = new UserSessionEntity();
+		String active = "N";
+		EntityManager entityManager = null;
+		EntityTransaction transaction = null;
+
+		try {
+			entityManager = JPAProvider.getCoreEntityManager();
+			transaction = entityManager.getTransaction();
+			Query sql = entityManager.createNamedQuery(AppConstants.QUERY_GET_ACTIVITY_CODE_BY_NAME, ActivityEntity.class);
+			sql.setParameter(AppConstants.REQUEST_KEY_NAME, requestAction);
+			List<ActivityEntity> lstEntities = sql.getResultList();
+
+			if (!lstEntities.isEmpty() && lstEntities.get(0).getIsActive() == 'Y') {
+
+				if ('Y' == lstEntities.get(0).getSessionCheck()) {
+					String sessionId = JsonUtil.getsessionId(inputParam);
+
+					Query sqlUserIdCheck = entityManager.createNamedQuery(AppConstants.QUERY_GET_USER_BY_USERID, UserEntity.class);
+					sqlUserIdCheck.setParameter(AppConstants.REQUEST_KEY_USERID, JsonUtil.getUserId(inputParam));
+					List<UserEntity> lstUserIdEntities = sqlUserIdCheck.getResultList();
+
+					Query sqlSessionCheck = entityManager.createNamedQuery(AppConstants.QUERY_GET_SESSION_STATUS_FOR_USER, UserSessionEntity.class);
+					sqlSessionCheck.setParameter(AppConstants.REQUEST_KEY_USERID, lstUserIdEntities.get(0).getId());
+					sqlSessionCheck.setParameter(AppConstants.REQUEST_KEY_SESSIONID, sessionId);
+					List<UserSessionEntity> lstSessionCheckEntities = sqlSessionCheck.getResultList();
+					if (!lstSessionCheckEntities.isEmpty()) {
+						UserSessionEntity = lstSessionCheckEntities.get(0);
+						UserSessionEntity.setIsActive('Y');
+						UserSessionEntity.setUpdatedBy(lstUserIdEntities.get(0).getId());
+						UserSessionEntity.setUpdatedOn(DateUtil.getCurrentTimestamp());
+						transaction.begin();
+						entityManager.persist(UserSessionEntity);
+						entityManager.flush();
+						transaction.commit();
+						active = "Y";
+					} else {
+						UserSessionEntity = lstSessionCheckEntities.get(0);
+						UserSessionEntity.setIsActive('N');
+						UserSessionEntity.setUpdatedBy(lstUserIdEntities.get(0).getId());
+						UserSessionEntity.setUpdatedOn(DateUtil.getCurrentTimestamp());
+						UserSessionEntity.setEndBy(String.valueOf(lstUserIdEntities.get(0).getId()));
+						UserSessionEntity.setEndBy(String.valueOf(DateUtil.getCurrentTimestamp()));
+						transaction.begin();
+						entityManager.persist(UserSessionEntity);
+						entityManager.flush();
+						transaction.commit();
+						active = "S";
+					}
+				} else
+					active = "Y";
+			} else {
+				active = "N";
+			}
+		} catch (Exception e) {
+			if (null != transaction && transaction.isActive()) {
+				transaction.rollback();
+			}
+			logger.error("Exception in checkProcessingIdStatus() : ", e);
+		} finally {
+			if (entityManager != null) {
+				entityManager.close();
+			}
+		}
+
+		return active;
+	}
+
+	@SuppressWarnings("unchecked")
+	private UserSessionEntity getUserSessionDetails(int userId, int channelId) {
+
+		UserSessionEntity sessionsEntity = null;
+		UserSessionEntity userSessionEntity = new UserSessionEntity();
+		EntityManager entityManager = null;
+		EntityTransaction transaction = null;
+
+		try {
+			entityManager = JPAProvider.getCoreEntityManager();
+			transaction = entityManager.getTransaction();
+			Query sqlUserSession = entityManager.createNamedQuery(AppConstants.QUERY_GET_ACTIVE_SESSION_BY_USERID, UserSessionEntity.class);
+			sqlUserSession.setParameter(AppConstants.REQUEST_KEY_USERID, userId);
+			sqlUserSession.setParameter(AppConstants.REQUEST_KEY_CHANNELID, channelId);
+			sqlUserSession.setParameter(AppConstants.REQUEST_KEY_ISACTIVE, 'Y');
+
+			List<UserSessionEntity> sessionsEntities = sqlUserSession.getResultList();
+			if (!sessionsEntities.isEmpty()) {
+				sessionsEntity = sessionsEntities.get(0);
+				userSessionEntity = sessionsEntities.get(0);
+				userSessionEntity.setUpdatedOn(DateUtil.getCurrentTimestamp());
+				userSessionEntity.setUpdatedBy(userId);
+				transaction.begin();
+				entityManager.persist(userSessionEntity);
+				entityManager.flush();
+				transaction.commit();
+			}
+
+		} catch (Exception e) {
+			if (null != transaction && transaction.isActive()) {
+				transaction.rollback();
+			}
+			logger.error("Exception in getUserSessionDetails() : ", e);
+		} finally {
+			if (entityManager != null) {
+				entityManager.close();
+			}
+		}
+
+		return sessionsEntity;
+	}
+
+	private void logRequest(TransactionLogEntity transactionLogEntity) {
+
+		EntityManager entityManager = null;
+		EntityTransaction transaction = null;
+		try {
+			entityManager = JPAUtility.getDFMwEntityManager();
+			transaction = entityManager.getTransaction();
+			// TransactionQueue.getInstance().addTransaction(transactionLogEntity);
+			transaction.begin();
+			entityManager.persist(transactionLogEntity);
+			entityManager.flush();
+			transaction.commit();
+
+		} catch (Exception e) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			logger.error("Execption in transactionLogEntity " + e);
+		} finally {
+			if (entityManager != null) {
+				entityManager.close();
+			}
+		}
+	}
+
+	private void logResponse(String rrnNumber, String responseData, String trnStatus) {
+
+		TransactionLogEntity transactionLogEntity = new TransactionLogEntity();
+		EntityManager entityManager = null;
+		EntityTransaction transaction = null;
+		try {
+			entityManager = JPAProvider.getCoreEntityManager();
+			transaction = entityManager.getTransaction();
+			Query sql = entityManager.createNamedQuery(AppConstants.QUERY_GET_TRN_BY_RRN, TransactionLogEntity.class);
+			sql.setParameter(AppConstants.REQUEST_KEY_RRN, rrnNumber);
+			@SuppressWarnings("unchecked")
+			List<TransactionLogEntity> lstTransactionLogEntity = sql.getResultList();
+			if (!lstTransactionLogEntity.isEmpty()) {
+				transactionLogEntity = lstTransactionLogEntity.get(0);
+				transactionLogEntity.setTransactionStatus(trnStatus);
+				transactionLogEntity.setResponse(responseData);
+				transactionLogEntity.setResponseDateTime(DateUtil.getCurrentTimestamp());
+
+				transaction.begin();
+				entityManager.persist(transactionLogEntity);
+				entityManager.flush();
+				transaction.commit();
+			}
+
+		} catch (Exception e) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			logger.error("Execption in transactionLogEntity Response " + e);
+		} finally {
+			if (entityManager != null) {
+				entityManager.close();
+			}
+		}
+	}
+
+	private String getSessionIdNotActiveResponse() {
+
+		return "{\"" + AppConstants.OUTPUT_PARAM + "\":{\"result\":\"" + AppConstants.RESULT_INVALID_SESSION + "\",\"opstatus\":\""
+				+ AppConstants.STATUS_INVALID_SESSION + "\"},\"opstatus\":\"" + AppConstants.STATUS_INVALID_SESSION + "\",\"result\":\""
+				+ AppConstants.RESULT_INVALID_SESSION + "\"}";
+	}
+
+	private String getMaxRequestReachedResponse() {
+
+		return "{\"" + AppConstants.OUTPUT_PARAM + "\":{\"result\":\"" + AppConstants.RESULT_MAX_REQUEST_LIMIT_REACHED + "\",\"opstatus\":\""
+				+ AppConstants.STATUS_INVALID_REQUEST + "\"},\"opstatus\":\"" + AppConstants.STATUS_INVALID_REQUEST + "\",\"result\":\""
+				+ AppConstants.RESULT_MAX_REQUEST_LIMIT_REACHED + "\"}";
+	}
+
+	private String getProcessingIdNotActiveResponse() {
+
+		return "{\"" + AppConstants.OUTPUT_PARAM + "\":{\"result\":\"" + AppConstants.RESULT_INVALID_SESSION + "\",\"opstatus\":\""
+				+ AppConstants.STATUS_INVALID_SESSION + "\"},\"opstatus\":\"" + AppConstants.STATUS_INVALID_SESSION + "\",\"result\":\""
+				+ AppConstants.RESULT_INVALID_SESSION + "\"}";
+	}
+
+}

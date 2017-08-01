@@ -1,0 +1,100 @@
+package com.wanderer.core.controller;
+
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.wanderer.core.entity.TransactionLogEntity;
+import com.wanderer.utility.beans.ResponseBean;
+import com.wanderer.utility.constants.AppConstants;
+import com.wanderer.utility.utils.CacheUtil;
+import com.wanderer.utility.utils.JsonUtil;
+import com.wanderer.utility.utils.ObjectUtil;
+import com.wanderer.utility.utils.PropertyReaderUtil;
+
+/**
+ * 
+ * @author anupam.babar
+ */
+public class JSONRequestProcessor {
+
+	private static final Logger logger = LoggerFactory.getLogger(JSONRequestProcessor.class);
+
+	private static Map<String, Object> serviceMap = null;
+
+	/**
+	 * @param action
+	 * @param subAction
+	 * @param inputParam
+	 * @param detail
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public String processRequest(String action, String subAction, Object inputParam, TransactionLogEntity transactionLogEntity) {
+
+		String responseStr = null;
+
+		try {
+			if (serviceMap == null) {
+				serviceMap = (Map<String, Object>) CacheUtil.getInstance()
+						.get(PropertyReaderUtil.getInstance().getValue(AppConstants.SERVICE_CONFIG_XML_DATA));
+			}
+
+			transactionLogEntity.setTransactionStatus(AppConstants.TRANSACTION_STATUS_INVOKING);
+			transactionLogEntity.setStage(AppConstants.REQUEST_STAGE_MIDDLEWARE_METHODINVOKER);
+			logRequest(transactionLogEntity);
+
+			TransactionLogEntity responseLogEntity = (TransactionLogEntity) ObjectUtil.cloneObject(transactionLogEntity);
+
+			ResponseBean responseBean;
+
+			Class serviceClass = (Class) Class.forName((String) serviceMap.get(action + AppConstants.SEPERATOR + AppConstants.CLASS));
+			String methodName = (String) serviceMap.get(action + AppConstants.SEPERATOR + subAction);
+			Class inputClass = (Class) Class
+					.forName((String) serviceMap.get(action + AppConstants.SEPERATOR + subAction + AppConstants.SEPERATOR + AppConstants.INPUT));
+
+			Object inputBean = null;
+			Object outputBean;
+
+			if (inputClass != null) {
+				inputBean = JsonUtil.getObject(inputParam.toString(), inputClass);
+			}
+			if (inputBean != null) {
+				outputBean = serviceClass.getMethod(methodName, inputClass).invoke(serviceClass.newInstance(), inputBean);
+			} else {
+				outputBean = serviceClass.getMethod(methodName).invoke(serviceClass.newInstance());
+			}
+
+			if (outputBean != null) {
+				responseBean = (ResponseBean) outputBean;
+
+				responseStr = JsonUtil.getJSONString(responseBean);
+				if (responseStr != null && !AppConstants.EMPTY.equals(responseStr)) {
+					responseLogEntity.setResponse(responseStr);
+					responseLogEntity.setTransactionStatus(AppConstants.TRANSACTION_STATUS_SUCCESS);
+				}
+			}
+
+			if (outputBean == null || responseStr == null || AppConstants.EMPTY.equals(responseStr)) {
+
+				responseLogEntity.setResponse(AppConstants.ERR_JSON_ERROR_MSG);
+				responseLogEntity.setTransactionStatus(AppConstants.TRANSACTION_STATUS_FAILURE);
+			}
+
+			responseLogEntity.setStage(AppConstants.RESPONSE_STAGE_MIDDLEWARE_METHODINVOKER);
+			logRequest(responseLogEntity);
+
+		} catch (Exception e) {
+			logger.error("Exception in JSONRequestProcessor.processRequest() : ", e);
+		}
+
+		return responseStr;
+	}
+
+	private void logRequest(TransactionLogEntity transactionLogEntity) {
+		TransactionQueue.getInstance().addTransaction(transactionLogEntity);
+	}
+
+}

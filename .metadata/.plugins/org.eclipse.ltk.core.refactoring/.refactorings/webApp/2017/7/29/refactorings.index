@@ -1,0 +1,4 @@
+1500308257960	Rename type 'HomeController'
+1500308992513	Move 'index.jsp' to 'views'
+1500309013966	Rename resource 'index.jsp'
+1500313065575	Move 'WebPortalFrontController.java' to 'controller'

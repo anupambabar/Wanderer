@@ -1,0 +1,13 @@
+
+Zsquid:S1854|"5Remove this useless assignment to local variable "d".(İØÖH–BRMAJORZBUG
+¶squid:S1186"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(Ú–³¶øÿÿÿÿH•BRCRITICALZ
+CODE_SMELL
+Ksquid:S1166@"%Either log or rethrow this exception.(”ı¾H“BRMAJORZBUG
+Ksquid:S1166}"%Either log or rethrow this exception.(”ı¾H”BRMAJORZBUG
+rsquid:S12269"EIntroduce a new variable instead of reusing the parameter "phoneNum".(Å—‰HBRMINORZ
+CODE_SMELL
+l
+squid:S106d";Replace this usage of System.out or System.err by a logger.(Şàš¬øÿÿÿÿHBRMAJORZ
+CODE_SMELL
+Rsquid:S1481|"&Remove this unused "d" local variable.(İØÖH‘BRMINORZ
+CODE_SMELL

@@ -1,0 +1,129 @@
+/**
+ * 
+ */
+package com.wanderer.utility.appservices.jms;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+
+import com.wanderer.core.controller.JSONRequestProcessor;
+import com.wanderer.core.controller.RequestProcessor;
+import com.wanderer.core.controller.TransactionLogEntity;
+import com.wanderer.utility.appservices.dbconnector.JPAProvider;
+import com.wanderer.utility.constants.AppConstants;
+import com.wanderer.utility.utils.DateUtil;
+import com.wanderer.utility.utils.JsonUtil;
+import com.wanderer.utility.utils.ObjectUtil;
+
+/**
+ * @author anupam babar
+ *
+ */
+public class JMSRequestProcessor {
+
+	private static final Logger logger = LoggerFactory.getLogger(JMSRequestProcessor.class);
+
+	@Autowired
+	JMSMessageSender jmsMessageSender;
+
+	/**
+	 * @param message
+	 * @param rrn
+	 */
+	public void processRequest(String message, String rrn, String requestKey) {
+
+		String responseJSON = "";
+
+		TransactionLogEntity transactionLogEntity = new TransactionLogEntity();
+		try {
+
+			JSONParser jParser = new JSONParser();
+			JSONObject reqObj = (JSONObject) jParser.parse(message);
+
+			String action = (String) reqObj.get(AppConstants.ACTION);
+			String subAction = (String) reqObj.get(AppConstants.SUBACTION);
+			String inputParam = reqObj.get(AppConstants.INPUT_PARAM).toString();
+			// String requestAction = JSONUtil.getRequestAction(inputParam);
+			String cifNumber = JsonUtil.getCifNumber(inputParam);
+			String mobileNumber = JsonUtil.getMobileNumber(inputParam);
+			String accountNumber = JsonUtil.getAccountNumber(inputParam);
+
+			transactionLogEntity.setActivityId(JsonUtil.getActivityId(inputParam));
+			transactionLogEntity.setUserId(JsonUtil.getUserId(inputParam));
+			transactionLogEntity.setRequestDateTime(DateUtil.getCurrentTimestamp());
+			transactionLogEntity.setTransactionStatus(AppConstants.TRANSACTION_STATUS_PROCESSING);
+			if (requestKey.equalsIgnoreCase(AppConstants.REQUEST_KEY_WEB_LOGIN_JMS)) {
+				transactionLogEntity.setChannelId(1);
+			} else if (requestKey.equalsIgnoreCase(AppConstants.REQUEST_KEY_MOBILE_LOGIN_JMS)) {
+				transactionLogEntity.setChannelId(2);
+			} else {
+				transactionLogEntity.setChannelId(3);
+			}
+			transactionLogEntity.setStage(AppConstants.REQUEST_STAGE_MIDDLEWARE_REQUESTPROCESSOR);
+			transactionLogEntity.setRequest(inputParam);
+			transactionLogEntity.setCreatedBy(1);
+			transactionLogEntity.setCreatedOn(DateUtil.getCurrentTimestamp());
+			transactionLogEntity.setIsActive('Y');
+
+			transactionLogEntity.setRequest(message);
+			transactionLogEntity.setRrn(rrn);
+
+			logRequest(transactionLogEntity);
+
+			TransactionLogEntity responseLogEntity = (TransactionLogEntity) ObjectUtil.cloneObject(transactionLogEntity);
+
+			if ((reqObj.containsKey(AppConstants.ACTION)) && (reqObj.containsKey(AppConstants.SUBACTION))
+					&& (reqObj.containsKey(AppConstants.INPUT_PARAM))) {
+				responseJSON = new JSONRequestProcessor().processRequest(action, subAction, reqObj.get(AppConstants.INPUT_PARAM), responseLogEntity);
+
+				saveResponse(responseJSON, rrn);
+				responseLogEntity.setResponse(responseJSON);
+			}
+
+			responseLogEntity.setStage(AppConstants.RESPONSE_STAGE_MIDDLEWARE_REQUESTPROCESSOR);
+			logRequest(responseLogEntity);
+
+		} catch (Exception e) {
+			logger.error("Exception in RequestProcessor.processRequest() : ", e);
+		}
+
+	}
+
+	/**
+	 * @param responseJSON
+	 * @param rrn
+	 */
+	private synchronized void saveResponse(String responseJSON, String rrn) {
+
+		EntityManager entityManager = JPAProvider.getCoreEntityManager();
+		EntityTransaction transaction = entityManager.getTransaction();
+
+		try {
+			ResponseEntity responseEntity = new ResponseEntity();
+			responseEntity.setRrn(rrn);
+			responseEntity.setResponse(responseJSON);
+			responseEntity.setCreatedBy(0);
+			responseEntity.setCreatedOn(DateUtil.getCurrentTimestamp());
+			responseEntity.setIsActive('Y');
+			transaction.begin();
+			entityManager.persist(responseEntity);
+			transaction.commit();
+		} catch (Exception e) {
+			transaction.rollback();
+			logger.error("Exception in saveResponse() : ", e);
+		} finally {
+			entityManager.close();
+		}
+	}
+
+	private void logRequest(TransactionLogEntity transactionLogEntity) {
+		TransactionQueue.getInstance().addTransaction(transactionLogEntity);
+	}
+}

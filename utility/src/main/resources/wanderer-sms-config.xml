@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SMS>
+	<MobileNumber>@MobileNumber@</MobileNumber>
+	<Message>@Message@</Message>
+	<Unicode>0</Unicode>
+	<CampaignID>0</CampaignID>
+	<UserID>dfrs@smartcall.ae</UserID>
+	<Pwd>DFtest5</Pwd>
+</SMS>

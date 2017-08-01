@@ -1,0 +1,88 @@
+/**
+ * 
+ */
+package com.wanderer.utility.utils;
+
+import java.security.GeneralSecurityException;
+import java.security.spec.KeySpec;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import com.wanderer.utility.constants.AppConstants;
+
+/**
+ * @author anupam babar
+ *
+ */
+public class CryptoUtil {
+
+	/**
+	 * @param txtToEncrypt
+	 * @param passphrase
+	 * @return
+	 */
+	public static String encryptNonAndroid(String txtToEncrypt, String passphrase) {
+
+		String combineData = AppConstants.EMPTY;
+		try {
+			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			String saltHex = getRandomHexString(32);
+			String ivHex = getRandomHexString(32);
+			byte[] salt = hexStringToByteArray(saltHex);
+			byte[] iv = hexStringToByteArray(ivHex);
+			SecretKeySpec sKey = (SecretKeySpec) generateKeyFromPassword(passphrase, salt);
+			cipher.init(Cipher.ENCRYPT_MODE, sKey, new IvParameterSpec(iv));
+			byte[] utf8 = txtToEncrypt.getBytes("UTF-8");
+			byte[] enc = cipher.doFinal(utf8);
+			combineData = saltHex + " " + ivHex + " " + new sun.misc.BASE64Encoder().encode(enc);
+		} catch (Exception e) {
+			logger.error(" Unable to encryptMaster : " + e);
+			return null;
+		}
+		return combineData;
+	}
+
+	/**
+	 * @param str
+	 * @param myKey
+	 * @return
+	 */
+	public static String decryptNonAndroid(String str, String myKey) {
+
+		String decrypted = null;
+
+		try {
+			if (null != str && str.contains("~~~")) {
+				String salt = str.split("~~~")[0];
+				String iv = str.split("~~~")[1];
+				String encryptedText = str.split("~~~")[2];
+
+				EncryptorDecryptor dec = new EncryptorDecryptor(128, 100);
+				decrypted = dec.decrypt(salt, iv, myKey, encryptedText);
+			} else {
+				decrypted = str;
+			}
+		} catch (Exception e) {
+			logger.error("Exception in decryptNonAndroid() : ", e);
+		}
+		return decrypted;
+	}
+
+	/**
+	 * @param password
+	 * @param saltBytes
+	 * @return
+	 * @throws GeneralSecurityException
+	 */
+	public static SecretKey generateKeyFromPassword(String password, byte[] saltBytes) throws GeneralSecurityException {
+		KeySpec keySpec = new PBEKeySpec(password.toCharArray(), saltBytes, 100, 128);
+		SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+		SecretKey secretKey = keyFactory.generateSecret(keySpec);
+		return new SecretKeySpec(secretKey.getEncoded(), "AES");
+	}
+}

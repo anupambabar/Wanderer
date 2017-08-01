@@ -1,0 +1,11 @@
+
+Gsquid:S1220""Move this file to a named package.HÊXRMINORZ
+CODE_SMELL
+lsquid:S1118	":Add a private constructor to hide the implicit public one.(¤¯‚ùÿÿÿÿHËXRMAJORZ
+CODE_SMELL
+s
+squid:S106";Replace this usage of System.out or System.err by a logger.(æ¨¤šøÿÿÿÿ8ºœŒµÙ+HÍXRMAJORZ
+CODE_SMELL
+Zsquid:S1481"&Remove this unused "c" local variable.(ä²8ºœŒµÙ+HÎXRMINORZ
+CODE_SMELL
+bsquid:S1854"5Remove this useless assignment to local variable "c".(ä²8ºœŒµÙ+HÏXRMAJORZBUG

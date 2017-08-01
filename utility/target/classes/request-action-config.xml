@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+
+	<!-- Web Request-Action Configuration Starts -->
+	<request>
+		<name>webLogin</name>
+		<action>webLogin</action>
+		<subaction>webLogin</subaction>
+	</request>
+	<!-- Web Request-Action Configuration Ends -->
+</config>

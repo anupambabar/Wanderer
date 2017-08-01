@@ -1,0 +1,160 @@
+package com.wanderer.utility.beans;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.wanderer.utility.appservices.serializer.UserAuthenticationSerializer;
+
+/**
+ * This bean is used for login credentials
+ * 
+ * 
+ * @author anupam.babar
+ */
+
+@SuppressWarnings("serial")
+@JsonDeserialize(using = UserAuthenticationSerializer.class)
+public class UserSecurityBean implements UserDetails {
+
+	private String username;
+	private String password;
+	private boolean enabled;
+	private List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+	private boolean accountNonExpired;
+	private boolean accountNonLocked;
+	private boolean credentialsNonExpired;
+	private String requestAction;
+
+	/**
+	 * call super
+	 */
+	public UserSecurityBean() {
+		super();
+	}
+
+	/**
+	 * @param strUserName
+	 * @param strPassword
+	 * @param enabled
+	 */
+	public UserSecurityBean(String strUserName, String strPassword, boolean enabled) {
+		super();
+		this.username = strUserName;
+		this.password = strPassword;
+		this.enabled = true;
+	}
+
+	/**
+	 * @param strUserName
+	 * @param strPassword
+	 * @param enabled
+	 * @param authorities
+	 * @param accountNonExpired
+	 * @param accountNonLocked
+	 * @param credentialsNonExpired
+	 */
+	public UserSecurityBean(String strUserName, String strPassword, boolean enabled, List<GrantedAuthority> authorities, boolean accountNonExpired,
+			boolean accountNonLocked, boolean credentialsNonExpired) {
+		super();
+		this.username = strUserName;
+		this.password = strPassword;
+		this.enabled = enabled;
+		this.authorities = authorities;
+		this.accountNonExpired = accountNonExpired;
+		this.accountNonLocked = accountNonLocked;
+		this.credentialsNonExpired = credentialsNonExpired;
+
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public List<GrantedAuthority> getAuthorities() {
+		return authorities;
+	}
+
+	public void setAuthorities(List<GrantedAuthority> authorities) {
+		this.authorities = authorities;
+	}
+
+	public boolean isAccountNonExpired() {
+		return accountNonExpired;
+	}
+
+	public void setAccountNonExpired(boolean accountNonExpired) {
+		this.accountNonExpired = accountNonExpired;
+	}
+
+	public boolean isAccountNonLocked() {
+		return accountNonLocked;
+	}
+
+	public void setAccountNonLocked(boolean accountNonLocked) {
+		this.accountNonLocked = accountNonLocked;
+	}
+
+	public boolean isCredentialsNonExpired() {
+		return credentialsNonExpired;
+	}
+
+	public void setCredentialsNonExpired(boolean credentialsNonExpired) {
+		this.credentialsNonExpired = credentialsNonExpired;
+	}
+
+	public String getRequestAction() {
+		return requestAction;
+	}
+
+	public void setRequestAction(String requestAction) {
+		this.requestAction = requestAction;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		boolean result = false;
+		if (object == null || object.getClass() != getClass()) {
+			result = false;
+		} else {
+			UserSecurityBean loginBean = (UserSecurityBean) object;
+			if (this.username.equals(loginBean.getUsername()) && this.password.equals(loginBean.getPassword())) {
+				result = true;
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public int hashCode() {
+		int hash = 3;
+		hash = 7 * hash + this.username.hashCode();
+		hash = 7 * hash + this.password.hashCode();
+
+		return hash;
+	}
+
+}

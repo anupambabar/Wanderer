@@ -1,0 +1,30 @@
+package com.wanderer.utility.appservices.jms;
+
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Session;
+
+import org.springframework.jms.listener.SessionAwareMessageListener;
+import org.springframework.stereotype.Component;
+
+/**
+ * 
+ * @author anupam.babar
+ * 
+ */
+
+@SuppressWarnings("rawtypes")
+@Component
+public class JMSMessageReceiver implements SessionAwareMessageListener {
+
+	/*@Autowired
+	RequestProcessor requestProcessor;*/
+
+	public void onMessage(Message message, Session session) throws JMSException {
+
+		/*TextMessage text = (TextMessage) message;
+		if (text != null && !AppConstants.JMS_RESPONSE_IDENTIFIER_VALUE.equals(text.getStringProperty(AppConstants.JMS_RESPONSE_IDENTIFIER_KEY))) {
+			requestProcessor.processRequest(text.getText(), text.getStringProperty(AppConstants.JMS_REQUEST_KEY_RRN));
+		}*/
+	}
+}

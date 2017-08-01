@@ -1,0 +1,12 @@
+/**
+ * 
+ */
+package com.wanderer.utility.appservices.crypto;
+
+/**
+ * @author anupam babar
+ *
+ */
+public class CryptoServiceProvider {
+
+}

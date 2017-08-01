@@ -1,0 +1,50 @@
+package com.wanderer.core.queue;
+
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.wanderer.core.entity.TransactionLogEntity;
+
+/**
+ * 
+ * @author anupam.babar
+ */
+public class TransactionQueue {
+
+	private static final Logger logger = LoggerFactory.getLogger(TransactionQueue.class);
+
+	private static TransactionQueue instance = new TransactionQueue();
+
+	private Queue<TransactionLogEntity> queue = new ConcurrentLinkedQueue<TransactionLogEntity>();
+
+	public static TransactionQueue getInstance() {
+		return instance;
+	}
+
+	public TransactionLogEntity getNextTransaction() {
+		TransactionLogEntity transactionLogEntity = null;
+		try {
+			transactionLogEntity = queue.poll();
+		} catch (Exception e) {
+			logger.error("Error while retrieving transction from queue : ", e);
+		}
+		return transactionLogEntity;
+	}
+
+	/**
+	 * @param transactionLogEntity
+	 */
+	public void addTransaction(TransactionLogEntity transactionLogEntity) {
+		try {
+			if (transactionLogEntity != null) {
+				queue.add(transactionLogEntity);
+			}
+		} catch (Exception e) {
+			logger.error("Error while adding transction to queue : ", e);
+		}
+	}
+
+}

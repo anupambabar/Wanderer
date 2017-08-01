@@ -1,0 +1,48 @@
+package com.wanderer.utility.appservices.dbconnector;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
+/**
+ * 
+ * @author anupam.babar
+ */
+public class JPAProvider {
+
+	private static final EntityManagerFactory coreEntityManagerFactory;
+
+	private JPAProvider() {
+	}
+
+	static {
+		coreEntityManagerFactory = null;
+		
+		/*dfMwEntityManagerFactory = Persistence
+				.createEntityManagerFactory(PropertyReaderUtil.getInstance().getValue(AppConstants.MW_PERSISTENCE_UNIT));
+		dfAdEntityManagerFactory = Persistence
+				.createEntityManagerFactory(PropertyReaderUtil.getInstance().getValue(AppConstants.ADMIN_PERSISTENCE_UNIT));
+*/
+	}
+
+	public synchronized static EntityManager getCoreEntityManager() {
+		return coreEntityManagerFactory.createEntityManager();
+	}
+
+	public synchronized static EntityManager getDFAdminEntityManager() {
+		return dfAdEntityManagerFactory.createEntityManager();
+	}
+
+	/**
+	 * used to close the factory
+	 */
+	public static void dfMwClose() {
+		dfMwEntityManagerFactory.close();
+	}
+
+	/**
+	 * used to close the factory
+	 */
+	public static void dfAdClose() {
+		dfAdEntityManagerFactory.close();
+	}
+}

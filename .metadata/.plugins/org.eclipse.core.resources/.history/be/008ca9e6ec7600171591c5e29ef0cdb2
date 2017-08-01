@@ -1,0 +1,230 @@
+package com.wanderer.utility.constants;
+
+/**
+ * 
+ * @author anupam.babar
+ */
+public class AppConstants {
+
+	// Persistence Unit Configuration
+	public static final String CORE_PERSISTENCE_UNIT = "core_persistence_unit";
+
+	// Role URL Configuration
+	public static final String ROLE_URL_LOGIN = "login_url_role";
+	public static final String ROLE_URL_USER = "user_url_role";
+
+	// LDAP Configuration
+	public static final String LDAP_SECURITY_AUTHENTICATION = "securityAuthentication";
+	public static final String LDAP_PROVIDER_URL = "providerUrl";
+	public static final String LDAP_SECURITY_PRINCIPAL = "securityPrincipal";
+	public static final String LDAP_USERNAME_EXTENSION_KEY = "ldapUsernameExtension";
+	public static final String LDAP_USERNAME_EXTENSION_VALUE = "ldap.username.extension";
+
+	// E-mail Configuration
+	public static final String EMAIL_HOST_SERVER_NAME = "emailHostServerName";
+	public static final String EMAIL_PORT = "emailPort";
+	public static final String EMAIL_SENDER_USER_NAME = "senderUsername";
+	public static final String EMAIL_SENDER_USER_PASSWORD = "senderPassword";
+	public static final String EMAIL_INITIAL_CONTEXT_FACTORY = "intialContextFactory";
+	public static final String EMAIL_SERVER_FROM_ADDRESS = "email_server_from_email";
+	public static final String EMAIL_SERVER_USERNAME = "email_server_username";
+	public static final String EMAIL_SERVER_PASSWORD = "email_server_password";
+	public static final String EMAIL_SCHEDULER_INTERVAL = "email_scheduler_interval";
+	public static final String EMAIL_SMTP_SERVER = "email_smtp_server";
+	public static final String EMAIL_SMTP_SERVER_PORT = "email_smtp_server_port";
+	public static final String EMAIL_SMTP_STARTTLS_ENABLE = "email_smtp_starttls_enable";
+	public static final String EMAIL_SMTP_AUTH = "email_smtp_auth";
+
+	// JSONUtil Configuration
+	public static final String TIME_ZONE = "time_zone";
+	public static final String DATE_FORMAT = "date_format";
+
+	// JMS Configuration
+	public static final String JMS_DEFAULT_MESSAGE = "jms_default_message";
+	public static final String JMS_DEFAULT_CONNECTION_FACTORY = "jms_default_connection_factory";
+	public static final String JMS_DEFAULT_REQUEST_DESTINATION = "jms_default_request_destination";
+	public static final String JMS_DEFAULT_RESPONSE_DESTINATION = "jms_default_response_destination";
+	public static final String JMS_DEFAULT_MESSAGE_COUNT = "jms_default_message_count";
+	public static final String JMS_DEFAULT_USERNAME = "jms_default_username";
+	public static final String JMS_DEFAULT_PASSWORD = "jms_default_password";
+	public static final String JMS_INITIAL_CONTEXT_FACTORY = "jms_initial_context_factory";
+	public static final String JMS_PROVIDER_URL = "jms_provider_url";
+	public static final String JMS_RESPONSE_IDENTIFIER_KEY = "handler";
+	public static final String JMS_RESPONSE_IDENTIFIER_VALUE = "response_handler";
+
+	// User Role Confugiration
+	public static final String ROLE_USER = "role_user";
+	public static final String ROLE_ADMIN = "role_admin";
+	public static final String ROLE_DBA = "role_dba";
+
+	// URL Configuration
+	// Request
+	public static final String REQUEST_URL_WEB = "request_url_web";
+	public static final String REQUEST_URL_MOBILE = "request_url_mobile";
+	public static final String REQUEST_PUSH_NOTIFICATION_URL = "pushNotification_url";
+	public static final String REQUEST_URL_JMS_WEB = "response_url_web";
+	public static final String REQUEST_URL_JMS_MOBILE = "response_url_mobile";
+	public static final String REQUEST_URL_KEY_JMS = "jms";
+	public static final String REQUET_MAP = "map";
+	public static final String REQUET_LIST = "list";
+
+	// Request Key Configuration
+	public static final String REQUEST_KEY_WEB_LOGIN = "webLogin";
+	public static final String REQUEST_KEY_MOBILE_LOGIN = "mobileLogin";
+	public static final String REQUEST_KEY_REQUESTACTION = "requestAction";
+	public static final String REQUEST_KEY_SESSIONID = "sessionId";
+	public static final String REQUEST_KEY_STATIC_SESSIONID = "staticSessionId";
+	public static final String REQUEST_KEY_ENCRYPTED = "encrypted";
+	public static final String RESULT_KEY_OTP_EXP_IN_MINUTES = "otp_expiration_minutes";
+	public static final String REQUEST_KEY_NAME = "name";
+	public static final String REQUEST_KEY_USERID = "userId";
+	public static final String REQUEST_KEY_CHANNELID = "channelid";
+	public static final String REQUEST_KEY_ISACTIVE = "isActive";
+
+	// Response Key Configuration
+	public static final String RESPONSE_KEY_STATUS = "opstatus";
+	public static final String RESPONSE_KEY_RESULT = "result";
+
+	// SMS Configuration
+	public static final String SMS_PUSH_URL = "sms_pushurl";
+	public static final String SMS_USERNAME = "sms_username";
+	public static final String SMS_PASSWORD = "sms_password";
+	public static final String SMS_TYPE = "sms_type";
+	public static final String SMS_DLR = "sms_dlr";
+	public static final String SMS_SOURCE = "sms_source";
+	public static final String SMS_ACTIVATION_TEXT = "sms_activation_text";
+	public static final String SMS_USERID_TEXT = "sms_userId_text";
+	public static final String SMS_PASSWORD_TEXT = "sms_password_text";
+	public static final String SMS_TICKET_REF_MSG = "sms_ticket_ref_msg";
+	public static final String SMS_INDIA = "SMS_INDIA";
+	public static final String SMS_DUBAI = "SMS_DUBAI";
+	public static final String SMS_CONFIG_XML = "sms_config_file_name";
+	public static final String SMS_CONFIG_XML_DATA = "sms_config_xml_data";
+	public static final String SMS_REPLACE_ACTCODE = "@ACT_CODE@";
+	public static final String SMS_REPLACE_TKTCODE = "@TKT_CODE@";
+	public static final String SMS_REPLACE_USERID = "@USER_ID@";
+	public static final String SMS_REPLACE_MOBILENO = "@MobileNumber@";
+	public static final String SMS_REPLACE_MESSAGE = "@Message@";
+	public static final String SMS_REPLACE_MESSAGE_NAME = "@MessageName@";
+	public static final String SMS_REPLACE_VALUE = "@replaceValue@";
+	public static final String SMS_REPLACE_USERNAME = "@USERNAME@";
+	public static final String SMS_REPLACE_PASSWORD = "@PASSWORD@";
+	public static final String SMS_REPLACE_TYPE = "type";
+	public static final String SMS_REPLACE_DLR = "dlr";
+	public static final String SMS_REPLACE_SOURCE = "source";
+	public static final String SMS_REPLACE_ACTIVATION_TEXT = "message";
+	public static final String SMS_REPLACE_DESTINATION = "destination";
+	public static final String SMS_FORGOT_USERID_TEXT = "sms_forgot_userid_text";
+	public static final String SMS_FORGOT_PASSWORD_TEXT = "sms_forgot_password_text";
+	public static final String SMS_USER_REGISTRATION_TEXT = "sms_user_registration_text";
+	public static final String SMS_USER_PROFILE_UPDATE_TEXT = "sms_user_profile_update_text";
+	public static final String SMS_USER_CHANGE_PASSWORD_TEXT = "sms_change_password_text";
+	public static final String SMS_ADD_BENEFICIARY_ACTIVATION_TEXT = "sms_add_beneficiary_activation_text";
+	public static final String SMS_DELETE_BENEFICIARY_ACTIVATION_TEXT = "sms_delete_beneficiary_activation_text";
+	public static final String SMS_MAKE_PAYMENT_ACTIVATION_TEXT = "sms_make_payment_activation_text";
+	public static final String SMS_ADD_BENEFICIARY_TEXT = "sms_add_beneficiary_text";
+	public static final String SMS_DELETE_BENEFICIARY_TEXT = "sms_delete_beneficiary_text";
+	public static final String SMS_CHANGE_PASSWORD_SUCCESS_TEXT = "sms_change_password_success_text";
+	public static final String SMS_MAKE_PAYMENT_TEXT = "sms_make_payment_text";
+	public static final String SMS_REPLACE_ADD_BENEFICIARY_TEXT = "@";
+	public static final String SMS_REPLACE_DELETE_BENEFICIARY_TEXT = "@";
+	public static final String SMS_REPLACE_MAKE_PAYMENT_TEXT = "@";
+
+	// Service Configuration
+	public static final String RSA_PREMASTER_SECRET_FIX = "rsa_premaster_secret_fix";
+	public static final String RSA_PREMASTER_SECRET_FIX_VALUE = "rsa_premaster_secret_fix_value";
+	public static final String HTTPS_PROTOCOLS = "https_protocols";
+	public static final String HTTPS_PROTOCOLS_VALUE = "https_protocols_value";
+	public static final String SERVICE_CONFIG_XML_DATA = "service_config_xml_data";
+	public static final String SERVICE_CONFIG_XML = "service_config_file_name";
+	public static final String REQUEST_ACTION_CONFIG_XML_DATA = "request_action_config_xml_data";
+	public static final String REQUEST_ACTION_CONFIG_XML = "request_action_config_file_name";
+	public static final String USER_AGENT_VALUE = "user_agent";
+	public static final String USER_AGENT = "User-Agent";
+	public static final String CONTENT_TYPE = "Content-type";
+	public static final String ACCEPT = "Accept";
+	public static final String SEPERATOR = "_";
+	public static final String BLANK_VALUE = "";
+	public static final String SPACE_VALUE = " ";
+	public static final String EMPTY = "";
+	public static final String INPUT = "INPUT";
+	public static final String CLASS = "CLASS";
+	public static final String ACTION = "action";
+	public static final String SUBACTION = "subAction";
+	public static final String INPUT_PARAM = "inputParam";
+	public static final String OUTPUT_PARAM = "outputParam";
+
+	// UserAuthenticationSerializer Constant Configuration
+	public static final String UAAS_USERID = "userId";
+	public static final String UAAS_USERNAME = "username";
+	public static final String UAAS_PASSWORD = "password";
+	public static final String UAAS_ROLEID = "roleId";
+	public static final String UAAS_MESSAGE = "message";
+	public static final String UAAS_ENABLED = "enabled";
+	public static final String UAAS_ACCOUNTNOTEXPIRED = "accountNonExpired";
+	public static final String UAAS_ACCOUNTNOTLOCKED = "accountNonLocked";
+	public static final String UAAS_CREDENTIALSNOTEXPIRED = "credentialsNonExpired";
+	public static final String UAAS_AUTHORITIES = "authorities";
+	public static final String UAAS_AUTHORITY = "authority";
+
+	// Error Codes Configuration
+	public static final String ERR_USER_NOT_FOUND = "User does not exist!";
+	public static final String ERR_PROCESS_NOT_ACTIVE = "Process Not Active.";
+	public static final String ERR_JSON_ERROR_MSG = "{\"msg\":\"Request could not be processed\"}";
+
+	// Transaction Log Status Constant Configuration
+	public static final String TRANSACTION_STATUS_PENDING = "Pending";
+	public static final String TRANSACTION_STATUS_INVOKING = "Invoking";
+	public static final String TRANSACTION_STATUS_PROCESSING = "Processing";
+	public static final String TRANSACTION_STATUS_SUCCESS = "Success";
+	public static final String TRANSACTION_STATUS_FAILURE = "Failure";
+	public static final String TRANSACTION_STATUS_ATTEMPT_EXCEEDED = "Maximum Attempts Exceeded";
+
+	// Status Configuration
+	public static final String STATUS_SUCCESS = "00";
+	public static final String STATUS_FAILURE = "01";
+	public static final String STATUS_SMS_FAILURE = "02";
+	public static final String STATUS_INVALID_SESSION = "03";
+	public static final String STATUS_ALREADY_EXISTS = "04";
+	public static final String STATUS_OTP_INCORRECT_EXPIRED = "05";
+	public static final String STATUS_INVALID_CREDENTIALS = "06";
+	public static final String STATUS_PASSWORD_LOCKED = "07";
+	public static final String STATUS_INVALID_REQUEST = "08";
+	public static final String STATUS_MAX_REQUEST_LIMIT_REACHED = "09";
+	public static final String STATUS_DEFAULT_ACTIVE = "Y";
+	public static final String STATUS_DEFAULT_INACTIVE = "N";
+
+	// Result Configuration
+	public static final String RESULT_SUCCESS = "Success";
+	public static final String RESULT_FAILURE = "Failure";
+	public static final String RESULT_SMS_FAILURE = "SMS not sent.";
+	public static final String RESULT_INVALID_SESSION = "Invalid session. Please login again.";
+	public static final String RESULT_ALREADY_EXISTS = "Please use different username, Username already exists.";
+	public static final String RESULT_OTP_INCORRECT_EXPIRED = "OTP is incorrect or has expired.";
+	public static final String RESULT_INVALID_CREDENTIALS = "Username or Password is incorrect. Please try again with correct credentials.";
+	public static final String RESULT_PASSWORD_LOCKED = "Your password is locked. Please try after some time.";
+	public static final String RESULT_INVALID_REQUEST = "Invalid Request";
+	public static final String RESULT_MAX_REQUEST_LIMIT_REACHED = "Max request limit reached for the day.";
+
+	// Request Stage Constant Configuration
+	public static final String REQUEST_STAGE_MIDDLEWARE_REQUESTMAPPER = "Request_Middleware_RequestMapper";
+	public static final String REQUEST_STAGE_MIDDLEWARE_JMSSENDER = "Request_Middleware_JMSSender";
+	public static final String REQUEST_STAGE_MIDDLEWARE_JMSRECEIVER = "Request_Middleware_JMSReceiver";
+	public static final String REQUEST_STAGE_MIDDLEWARE_REQUESTPROCESSOR = "Request_Middleware_RequestProcessor";
+	public static final String REQUEST_STAGE_MIDDLEWARE_METHODINVOKER = "Request_Middleware_MethodInvoker";
+	public static final String RESPONSE_STAGE_MIDDLEWARE_REQUESTMAPPER = "Response_Middleware_RequestMapper";
+	public static final String RESPONSE_STAGE_MIDDLEWARE_JMSSENDER = "Response_Middleware_JMSSender";
+	public static final String RESPONSE_STAGE_MIDDLEWARE_JMSRECEIVER = "Response_Middleware_JMSReceiver";
+	public static final String RESPONSE_STAGE_MIDDLEWARE_REQUESTPROCESSOR = "Response_Middleware_RequestProcessor";
+	public static final String RESPONSE_STAGE_MIDDLEWARE_METHODINVOKER = "Response_Middleware_MethodInvoker";
+	public static final String GETRESPONSE_STAGE_MIDDLEWARE_REQUESTMAPPER = "Get_Response_Middleware_RequestMapper";
+
+	// Query Configuration
+	public static final String QUERY_GET_ACTIVE_SESSION_BY_USERID = "getActiveSessionByUserId";
+	public static final String QUERY_GET_ACTIVITY_CODE_BY_NAME = "getActivityCodeByName";
+	public static final String QUERY_GET_USER_BY_USERID = "getUserByUserId";
+	public static final String QUERY_GET_SESSION_STATUS_FOR_USER = "getSessionStatusForUser";
+
+	private AppConstants() {
+	}
+}

@@ -1,0 +1,25 @@
+
+†squid:S1132ß"RMove the "MobilelogOut" string literal on the left side of this string comparison.(·ñ£·şÿÿÿÿ8”¨ôóÙ+Hä—RMINORZBUG
+isquid:S1172p"4Remove this unused method parameter "stringBuilder".(×®’¿8”¨ôóÙ+Hè—RMAJORZ
+CODE_SMELL
+hsquid:S1481†"-Remove this unused "deviceId" local variable.(Õ•Şºÿÿÿÿÿ8ü¹ÃôÙ+H™­RMINORZ
+CODE_SMELL
+xsquid:S2259’"INullPointerException might be thrown as 'sessionsEntity' is nullable here(æ™œò8º…áúÙ+HéÁRMAJORZBUG
+ksquid:S1854ï"7Remove this useless assignment to local variable "val".(ù€ñ“üÿÿÿÿ8ÙïàøÙ+Hˆ¬RMAJORZBUG
+squid:S1192ä"RDefine a constant instead of duplicating this literal "\":{\"result\":\"" 3 times.(Ï¬û¨ûÿÿÿÿ8”¨ôóÙ+HŞ—RCRITICALZ
+CODE_SMELL
+Šsquid:S3776„"RRefactor this method to reduce its Cognitive Complexity from 23 to the 15 allowed.(’„•G8”¨ôóÙ+Hç—RCRITICALZ
+CODE_SMELL
+Šsquid:S3776p"RRefactor this method to reduce its Cognitive Complexity from 16 to the 15 allowed.(×®’¿8”¨ôóÙ+Hå—RCRITICALZ
+CODE_SMELL
+‘squid:S1192ä"SDefine a constant instead of duplicating this literal "\",\"opstatus\":\"" 3 times.(Ï¬û¨ûÿÿÿÿ8”¨ôóÙ+Hß—RCRITICALZ
+CODE_SMELL
+squid:S1192å"QDefine a constant instead of duplicating this literal "\",\"result\":\"" 3 times.(şÍÊ›üÿÿÿÿ8”¨ôóÙ+Hà—RCRITICALZ
+CODE_SMELL
+’squid:S1192å"TDefine a constant instead of duplicating this literal "\"},\"opstatus\":\"" 3 times.(şÍÊ›üÿÿÿÿ8”¨ôóÙ+Hİ—RCRITICALZ
+CODE_SMELL
+xsquid:S2259å"INullPointerException might be thrown as 'sessionsEntity' is nullable here(æ™œò8ÿáúÙ+HîÁRMAJORZBUG
+nsquid:S1854‰"@Remove this useless assignment to local variable "encyrptedMap".(Ú¯â8”¨ôóÙ+Hé—RMAJORZBUG
+osquid:S1854å"@Remove this useless assignment to local variable "sessionToken".(æ™œò8ÙïàøÙ+H‡¬RMAJORZBUG
+squid:S3776·"RRefactor this method to reduce its Cognitive Complexity from 28 to the 15 allowed.(±íŠÜÿÿÿÿÿ8”¨ôóÙ+Hæ—RCRITICALZ
+CODE_SMELL

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="org.springframework.web.bind.annotation.RestController"/>
+<fullyQualifiedTypeName name="java.sql.Timestamp"/>
+<fullyQualifiedTypeName name="com.wanderer.utility.bean.User"/>
+<fullyQualifiedTypeName name="org.slf4j.Logger"/>
+<fullyQualifiedTypeName name="org.slf4j.LoggerFactory"/>
+<fullyQualifiedTypeName name="com.wanderer.utility.util.EmailUtil"/>
+<fullyQualifiedTypeName name="org.springframework.security.access.AccessDeniedException"/>
+<fullyQualifiedTypeName name="org.springframework.expression.ParseException"/>
+<fullyQualifiedTypeName name="com.wanderer.utility.appservices.dbconnector.JPAProvider"/>
+<fullyQualifiedTypeName name="java.sql.Date"/>
+<fullyQualifiedTypeName name="java.util.Date"/>
+<fullyQualifiedTypeName name="com.wanderer.utility.appservices.crypto.CryptoServiceProvider"/>
+<fullyQualifiedTypeName name="javax.jms.Message"/>
+<fullyQualifiedTypeName name="javax.jms.Session"/>
+<fullyQualifiedTypeName name="com.wanderer.utility.constants.AppConstants"/>
+<fullyQualifiedTypeName name="com.wanderer.utility.utils.JsonUtil"/>
+<fullyQualifiedTypeName name="com.wanderer.core.entity.ResponseEntity"/>
+</qualifiedTypeNameHistroy>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+	version="2.0">
+
+	<persistence-unit name="com.df.mw.entity"
+		transaction-type="RESOURCE_LOCAL">
+		<provider>org.hibernate.ejb.HibernatePersistence</provider>
+		<jta-data-source>java:jboss/datasources/DF_MW_ORACLEDS</jta-data-source>
+
+		<!-- <class>com.df.entity.CustomerUserEntity</class> -->
+
+		<properties>
+			<!-- Hibernate properties -->
+			<property name="hibernate.default_schema" value="DFMIDDLEWARE" />
+			<property name="jboss.as.jpa.managed" value="false" />
+			<property name="hibernate.dialect" value="org.hibernate.dialect.Oracle10gDialect" />
+			<property name="hibernate.hbm2ddl.auto" value="validate" />
+			<property name="hibernate.show_sql" value="true" />
+
+			<!-- Configuring Connection Pool -->
+			<property name="hibernate.c3p0.min_size" value="5" />
+			<property name="hibernate.c3p0.max_size" value="20" />
+			<property name="hibernate.c3p0.timeout" value="500" />
+			<property name="hibernate.c3p0.max_statements" value="50" />
+			<property name="hibernate.c3p0.idle_test_period" value="100" />
+			<!-- <property name="hibernate.connection.release_mode" value="after_transaction" /> -->
+
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="com.df.admin.entity"
+		transaction-type="RESOURCE_LOCAL">
+		<provider>org.hibernate.ejb.HibernatePersistence</provider>
+		<jta-data-source>java:jboss/datasources/DF_ADMIN_ORACLEDS</jta-data-source>
+
+		<class>com.df.entity.ConfigurationEntity</class>
+		<class>com.df.entity.AdminRoleEntity</class>
+		<class>com.df.entity.AdminGroupEntity</class>
+		<class>com.df.entity.AdminUserEntity</class>
+		<class>com.df.entity.ScreenEntity</class>
+		<class>com.df.entity.ScreenModuleEntity</class>
+		<class>com.df.entity.RoleWiseScreenEntity</class>
+		<class>com.df.entity.RoleWiseModuleEntity</class>
+		<class>com.df.entity.AdminUserSessionsEntity</class>
+		<class>com.df.entity.HolidayCalendarEntity</class>
+		<class>com.df.entity.FrequencyEntity</class>
+		
+		<properties>
+			<!-- Hibernate properties -->
+			<!-- PROD SCHEMA -->
+			<!-- <property name="hibernate.default_schema" value="MOBADM" /> --> 
+			<!-- UAT SCHEMA -->
+			<property name="hibernate.default_schema" value="DFADMIN" />  
+			
+			<property name="jboss.as.jpa.managed" value="false" />
+			<property name="hibernate.dialect" value="org.hibernate.dialect.Oracle10gDialect" />
+			<property name="hibernate.hbm2ddl.auto" value="validate" />
+			<property name="hibernate.show_sql" value="true" />
+
+			<!-- Configuring Connection Pool -->
+			<property name="hibernate.c3p0.min_size" value="5" />
+			<property name="hibernate.c3p0.max_size" value="20" />
+			<property name="hibernate.c3p0.timeout" value="500" />
+			<property name="hibernate.c3p0.max_statements" value="50" />
+			<property name="hibernate.c3p0.idle_test_period" value="100" />
+			<!-- <property name="hibernate.connection.release_mode" value="after_transaction" /> -->
+
+		</properties>
+	</persistence-unit>
+</persistence>

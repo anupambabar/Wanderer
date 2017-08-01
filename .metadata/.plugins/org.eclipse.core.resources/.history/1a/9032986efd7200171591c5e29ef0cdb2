@@ -1,0 +1,194 @@
+package com.wanderer.utility.appservices.accesshandler;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import com.wanderer.utility.beans.UserSecurityBean;
+import com.wanderer.utility.beans.RequestActionConfigBean;
+import com.wanderer.utility.beans.RequestBean;
+import com.wanderer.utility.constants.AppConstants;
+import com.wanderer.utility.utils.CacheUtil;
+import com.wanderer.utility.utils.PropertyReaderUtil;
+import com.wanderer.utility.utils.JSONUtil;
+
+/**
+ * 
+ * @author anupam.babar
+ */
+public class CustomUserDetailsService implements UserDetailsService {
+
+	private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
+	private static RequestActionConfigBean requestActionBean = null;
+
+	/**
+	 * Set System Properties
+	 */
+	public void setSystemProperties() {
+		System.setProperty(PropertyReaderUtil.getInstance().getValue(AppConstants.RSA_PREMASTER_SECRET_FIX), PropertyReaderUtil.getInstance()
+				.getValue(AppConstants.RSA_PREMASTER_SECRET_FIX_VALUE));
+		System.setProperty(PropertyReaderUtil.getInstance().getValue(AppConstants.HTTPS_PROTOCOLS),
+				PropertyReaderUtil.getInstance().getValue(AppConstants.HTTPS_PROTOCOLS_VALUE));
+	}
+
+	/**
+	 * @param url
+	 * @return
+	 */
+	public HttpPost getPostRequest(String url) {
+		HttpPost post = new HttpPost(url);
+		post.setHeader(AppConstants.USER_AGENT, PropertyReaderUtil.getInstance().getValue(AppConstants.USER_AGENT_VALUE));
+		post.setHeader(AppConstants.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+		post.setHeader(AppConstants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+		return post;
+	}
+
+	/**
+	 * @param requestBean
+	 * @param requestURL
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private static RequestBean initializeRequestBean(RequestBean requestBean, String requestKey) {
+
+		Map<String, RequestActionConfigBean> requestActionMap = new HashMap<String, RequestActionConfigBean>();
+		
+		if(requestActionMap.isEmpty()){
+			requestActionMap = (Map<String, RequestActionConfigBean>) CacheUtil.getInstance().get(
+					PropertyReaderUtil.getInstance().getValue(AppConstants.REQUEST_ACTION_CONFIG_XML_DATA));
+		}
+		
+		requestActionBean = requestActionMap.get(requestKey);
+		
+		requestBean.setAction(requestActionBean.getAction());
+		requestBean.setSubAction(requestActionBean.getSubaction());
+
+		return requestBean;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		
+		setSystemProperties();
+
+		RequestBean requestBean = new RequestBean();
+		String jsonString = null;
+		String url;
+		HttpClient client = HttpClientBuilder.create().build();
+		HttpPost post;
+		UserSecurityBean userBean = new UserSecurityBean();
+		Map responseMap = new HashMap<String, String>();
+
+		url = PropertyReaderUtil.getInstance().getValue(AppConstants.REQUEST_URL_CUSTOMER);
+		requestBean = initializeRequestBean(requestBean, AppConstants.REQUEST_KEY_CUSTOMER_LOGIN);
+
+		try {
+			userBean.setUsername(username);
+			userBean.setRequestAction(requestBean.getAction());
+			requestBean.setInputParam(userBean);
+			jsonString = JSONUtil.getJSONString(requestBean);
+
+			post = getPostRequest(url);
+			post.setEntity(new StringEntity(jsonString));
+
+			HttpResponse response;
+			response = client.execute(post);
+			
+			InputStreamReader streamReader = new InputStreamReader(response.getEntity().getContent());
+			BufferedReader rd = new BufferedReader(streamReader);
+
+			StringBuilder result = new StringBuilder();
+			String line;
+			while ((line = rd.readLine()) != null) {
+				result.append(line);
+			}
+			String res = result.toString();
+			JSONParser jParser = new JSONParser();
+			JSONObject reqObj = (JSONObject) jParser.parse(res);
+			responseMap = (Map) JSONUtil.getObject(reqObj.get(AppConstants.OUTPUT_PARAM).toString(), HashMap.class);
+			userBean = getResponse(responseMap);
+			
+
+		} catch (Exception e) {
+			logger.error("Exception in Customer.CustomUserDetailsService.loadUserByUsername() : ", e);
+			throw new UsernameNotFoundException(AppConstants.ERR_USER_NOT_FOUND);
+		}
+
+		return userBean;
+	}
+
+	/**
+	 * @param responseMap
+	 * @return
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private UserSecurityBean getResponse(Map rrnResponseMap) {
+		
+		UserSecurityBean userBean = new UserSecurityBean();
+		RequestBean requestBean = new RequestBean();
+		Map requestMap = new HashMap<String, String>();
+		String jsonString = null;
+		String url = null;
+		HttpClient client = HttpClientBuilder.create().build();
+		HttpPost post;
+		
+		boolean runWithJMS = false;
+		
+		try{
+			if(runWithJMS){
+
+				Thread.sleep(1000);
+				url = PropertyReaderUtil.getInstance().getValue(AppConstants.GET_RESPONSE_URL_CUSTOMER);
+				requestMap.put(AppConstants.REQUEST_KEY_REQUESTACTION, rrnResponseMap.get(AppConstants.REQUEST_KEY_REQUESTACTION));
+				requestMap.put(AppConstants.REQUEST_KEY_RRN, rrnResponseMap.get(AppConstants.REQUEST_KEY_RRN));
+				requestBean.setInputParam(requestMap);
+				jsonString = JSONUtil.getJSONString(requestBean);
+				
+				post = getPostRequest(url);
+				post.setEntity(new StringEntity(jsonString));
+
+				HttpResponse response;
+				response = client.execute(post);
+				
+				InputStreamReader streamReader = new InputStreamReader(response.getEntity().getContent());
+				BufferedReader rd = new BufferedReader(streamReader);
+
+				StringBuilder result = new StringBuilder();
+				String line;
+				while ((line = rd.readLine()) != null) {
+					result.append(line);
+				}
+				String res = result.toString();
+				JSONParser jParser = new JSONParser();
+				JSONObject reqObj = (JSONObject) jParser.parse(res);
+				userBean = (UserSecurityBean) JSONUtil.getObject(reqObj.get(AppConstants.OUTPUT_PARAM).toString(), UserSecurityBean.class);
+				
+				streamReader.close();
+			
+			}else{
+				userBean = (UserSecurityBean) JSONUtil.getObject(JSONUtil.getJSONString(rrnResponseMap), UserSecurityBean.class);
+			}
+		} catch (Exception e){
+			logger.error("Exception in Customer.CustomUserDetailsService.getResponse() : ", e);
+		}
+		
+		return userBean;
+	}
+}

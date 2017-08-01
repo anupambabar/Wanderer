@@ -1,0 +1,12 @@
+
+`squid:S1148+"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8ú²—ùÙ+Hâ±RMINORZVULNERABILITY
+osquid:S1191"5Use classes from the Java API instead of Sun classes.(Ó¨Ôÿÿÿÿÿ8Õ¤±ùÙ+H•´RMAJORZ
+CODE_SMELL
+`squid:S1068"+Remove this unused "keySize" private field.(—‡Ö 8‹Ó–ùÙ+HÙ±RMAJORZ
+CODE_SMELL
+Rsquid:S1166*"%Either log or rethrow this exception.(ÿÒ„p8¹Ì•ùÙ+HÌ±RMAJORZBUG
+Ssquid:S1166="%Either log or rethrow this exception.(”ı¾8”Ó’ùÙ+Hº±RMAJORZBUG
+`squid:S1148-"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8ú²—ùÙ+Há±RMINORZVULNERABILITY
+Ssquid:S1166,"%Either log or rethrow this exception.(Ë‡…¨8¹Ì•ùÙ+HÍ±RMAJORZBUG
+fsquid:S1068"2Remove this unused "iterationCount" private field.(œ›±08øŞ˜ùÙ+Hé±RMAJORZ
+CODE_SMELL

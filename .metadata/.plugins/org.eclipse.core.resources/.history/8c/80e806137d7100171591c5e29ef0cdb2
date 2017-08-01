@@ -1,0 +1,39 @@
+/**
+ * 
+ */
+package com.wanderer.utility.beans;
+
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+/**
+ * 
+ * @author anupam.babar
+ */
+@XmlRootElement(name = "config")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class XMLRequestActionConfiguration {
+
+	@XmlElement(name = "request")
+	private List<RequestActionConfigBean> requestActionConfigBeanList;
+
+	/**
+	 * @return the requestActionConfigBean
+	 */
+	public List<RequestActionConfigBean> getRequestActionConfigBeanList() {
+		return requestActionConfigBeanList;
+	}
+
+	/**
+	 * @param requestActionConfigBean
+	 * the requestActionConfigBean to set
+	 */
+	public void setRequestActionConfigBeanList(List<RequestActionConfigBean> requestActionConfigBeanList) {
+		this.requestActionConfigBeanList = requestActionConfigBeanList;
+	}
+
+}

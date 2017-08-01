@@ -1,0 +1,18 @@
+/**
+ * 
+ */
+package com.wanderer.utility.appservices.crypto;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.wanderer.utility.utils.CryptoUtil;
+
+/**
+ * @author anupam babar
+ *
+ */
+public class CryptoServiceProvider {
+
+	private static final Logger logger = LoggerFactory.getLogger(CryptoServiceProvider.class);
+}

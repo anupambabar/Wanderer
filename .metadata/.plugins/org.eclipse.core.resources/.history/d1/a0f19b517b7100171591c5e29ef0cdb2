@@ -1,0 +1,48 @@
+package com.wanderer.utility.util;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+
+/**
+ * 
+ * @author anupam.babar
+ */
+public class JPAUtility {
+
+	private static final EntityManagerFactory dfMwEntityManagerFactory;
+	private static final EntityManagerFactory dfAdEntityManagerFactory;
+
+	private JPAUtility() {
+	}
+
+	static {
+		dfMwEntityManagerFactory = Persistence.createEntityManagerFactory(PropertyReaderUtil.getInstance().getValue(
+				AppConstants.DF_MW_PERSISTENCE_UNIT));
+		dfAdEntityManagerFactory = Persistence.createEntityManagerFactory(PropertyReaderUtil.getInstance().getValue(
+				AppConstants.DF_ADMIN_PERSISTENCE_UNIT));
+
+	}
+
+	public synchronized static EntityManager getDFMwEntityManager() {
+		return dfMwEntityManagerFactory.createEntityManager();
+	}
+
+	public synchronized static EntityManager getDFAdminEntityManager() {
+		return dfAdEntityManagerFactory.createEntityManager();
+	}
+
+	/**
+	 * used to close the factory
+	 */
+	public static void dfMwClose() {
+		dfMwEntityManagerFactory.close();
+	}
+
+	/**
+	 * used to close the factory
+	 */
+	public static void dfAdClose() {
+		dfAdEntityManagerFactory.close();
+	}
+}

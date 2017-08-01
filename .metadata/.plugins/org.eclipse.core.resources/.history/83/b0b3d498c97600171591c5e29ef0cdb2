@@ -1,0 +1,485 @@
+/**
+ * 
+ */
+package com.wanderer.utility.utils;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.KeySpec;
+import java.text.DecimalFormat;
+import java.util.Arrays;
+import java.util.Random;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+
+import com.df.controller.EncryptorDecryptor;
+
+/**
+ * @author anupam.babar
+ *
+ */
+public class ObjectUtil {
+
+	private static final Logger logger = LoggerFactory.getLogger(ObjectUtil.class);
+
+	private ObjectUtil() {
+	}
+
+	/**
+	 * @param obj
+	 * @return
+	 */
+	public static Object cloneObject(Object obj) {
+
+		Object clone = null;
+
+		try {
+			clone = obj.getClass().newInstance();
+			for (Field field : obj.getClass().getDeclaredFields()) {
+				field.setAccessible(true);
+				field.set(clone, field.get(obj));
+			}
+
+		} catch (Exception e) {
+			logger.error("Exception in cloneObject() : ", e);
+		}
+		return clone;
+	}
+
+	/**
+	 * @param randomKey
+	 * @param reqData
+	 * @param mobPlatform
+	 * @return
+	 */
+	public static String encryptMaster(String randomKey, String reqData, String mobPlatform) {
+
+		String encrypted = "";
+		if (mobPlatform.equalsIgnoreCase(AppConstants.REQUEST_KEY_PLATFORM_ANDRIOD)) {
+			SecretKey key = new SecretKeySpec(reqData.getBytes(), "AES");
+
+			try {
+				Cipher ecipher = Cipher.getInstance("AES");
+				ecipher.init(Cipher.ENCRYPT_MODE, key);
+				byte[] utf8 = randomKey.getBytes("UTF-8");
+				byte[] enc = ecipher.doFinal(utf8);
+
+				encrypted = new sun.misc.BASE64Encoder().encode(enc);
+			} catch (Exception e) {
+				logger.error(" Unable to encrypt : ", e);
+			}
+		} else {
+			encrypted = encryptNonAndroid(randomKey, reqData);
+		}
+		return encrypted;
+	}
+
+	/**
+	 * @param str
+	 * @param myKey
+	 * @param mobPlatform
+	 * @return
+	 */
+	public static String decryptMaster(String str, String myKey, String mobPlatform) {
+
+		String decrypted = "";
+		if (mobPlatform.equalsIgnoreCase(AppConstants.REQUEST_KEY_PLATFORM_ANDRIOD)) {
+			SecretKey key = new SecretKeySpec(myKey.getBytes(), "AES");
+
+			try {
+				Cipher decipher = Cipher.getInstance("AES");
+				decipher.init(Cipher.DECRYPT_MODE, key);
+				byte[] dec = new sun.misc.BASE64Decoder().decodeBuffer(str);
+				byte[] utf8 = decipher.doFinal(dec);
+				decrypted = new String(utf8, "UTF-8");
+			} catch (Exception e) {
+				logger.error(" Unable to Decrypt : " + str + "-" + e + "-" + myKey);
+			}
+		}
+		return decrypted;
+	}
+	
+	/*public static void main(String[] args) {
+		System.out.println(encryptNonAndroid("Test123", "p@DiTf61RAM$vp$"));
+		System.out.println(decryptNonAndroidWithoutTild("e94cff2d50da96d131c5ce155247d7a7 69b669964b3710d63a64572d2bd05f6a wQXY7WOBNdzrTjQOuYb0kg==", "p@DiTf61RAM$vp$"));
+	}*/
+
+	/**
+	 * @param txtToEncrypt
+	 * @param passphrase
+	 * @return
+	 */
+	public static String encryptNonAndroid(String txtToEncrypt, String passphrase) {
+
+		String combineData = AppConstants.EMPTY;
+		try {
+			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			String saltHex = getRandomHexString(32);
+			String ivHex = getRandomHexString(32);
+			byte[] salt = hexStringToByteArray(saltHex);
+			byte[] iv = hexStringToByteArray(ivHex);
+			SecretKeySpec sKey = (SecretKeySpec) generateKeyFromPassword(passphrase, salt);
+			cipher.init(Cipher.ENCRYPT_MODE, sKey, new IvParameterSpec(iv));
+			byte[] utf8 = txtToEncrypt.getBytes("UTF-8");
+			byte[] enc = cipher.doFinal(utf8);
+			combineData = saltHex + " " + ivHex + " " + new sun.misc.BASE64Encoder().encode(enc);
+		} catch (Exception e) {
+			logger.error(" Unable to encryptMaster : " + e);
+			return null;
+		}
+		return combineData;
+	}
+	
+	/**
+	 * @param str
+	 * @param myKey
+	 * @return
+	 */
+	public static String decryptNonAndroid(String str, String myKey) {
+
+		String decrypted = null;
+
+		try {
+			if(null != str && str.contains("~~~")){
+				String salt = str.split("~~~")[0];
+				String iv = str.split("~~~")[1];
+				String encryptedText = str.split("~~~")[2];
+
+				EncryptorDecryptor dec = new EncryptorDecryptor(128, 100);
+				decrypted = dec.decrypt(salt, iv, myKey, encryptedText);
+			} else{
+				decrypted = str;
+			}
+		} catch (Exception e) {
+			logger.error("Exception in decryptNonAndroid() : ", e);
+		}
+		return decrypted;
+	}
+
+	/**
+	 * @param str
+	 * @param myKey
+	 * @return
+	 */
+	public static String decryptNonAndroidWithoutTild(String str, String myKey) {
+
+		String decrypted = null;
+
+		try {
+
+			if (str.length() > 20) {
+				String salt = str.split(" ")[0];
+				String iv = str.split(" ")[1];
+				String encryptedText = str.split(" ")[2];
+
+				EncryptorDecryptor dec = new EncryptorDecryptor(128, 100);
+				decrypted = dec.decrypt(salt, iv, myKey, encryptedText);
+			} else
+				decrypted = str;
+
+		} catch (Exception e) {
+			logger.error("Exception in decryptNonAndroid() : ", e);
+		}
+		return decrypted;
+	}
+
+	/**
+	 * @param s
+	 * @return
+	 */
+	public static byte[] hexStringToByteArray(String s) {
+		int len = s.length();
+		byte[] data = new byte[len / 2];
+		for (int i = 0; i < len; i += 2) {
+			data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
+		}
+		return data;
+	}
+
+	/**
+	 * @param numchars
+	 * @return
+	 */
+	private static String getRandomHexString(int numchars) {
+		Random r = new Random();
+		StringBuilder sb = new StringBuilder();
+		while (sb.length() < numchars) {
+			sb.append(Integer.toHexString(r.nextInt()));
+		}
+		return sb.toString().substring(0, numchars);
+	}
+
+	/**
+	 * @param password
+	 * @param saltBytes
+	 * @return
+	 * @throws GeneralSecurityException
+	 */
+	public static SecretKey generateKeyFromPassword(String password, byte[] saltBytes) throws GeneralSecurityException {
+		KeySpec keySpec = new PBEKeySpec(password.toCharArray(), saltBytes, 100, 128);
+		SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+		SecretKey secretKey = keyFactory.generateSecret(keySpec);
+		return new SecretKeySpec(secretKey.getEncoded(), "AES");
+	}
+
+	/**
+	 * @return
+	 */
+	public static String generateSalt() {
+		SecureRandom random = new SecureRandom();
+		byte bytes[] = new byte[20];
+		random.nextBytes(bytes);
+		return new String(bytes);
+	}
+
+	/**
+	 * @param url
+	 * @return
+	 * @throws Exception
+	 */
+	public static String sendGet(String url) throws Exception {
+		URL obj = new URL(url);
+		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+		// optional default is GET
+		con.setRequestMethod("GET");
+
+		// add request header
+		con.setRequestProperty("User-Agent", GlobalPropertyReader.getInstance().getValue(AppConstants.USER_AGENT_VALUE));
+
+		int responseCode = con.getResponseCode();
+		logger.debug("Response from Server  : " + responseCode);
+
+		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuilder response = new StringBuilder();
+
+		while ((inputLine = in.readLine()) != null) {
+			response.append(inputLine);
+		}
+		in.close();
+		return response.toString();
+	}
+
+	/**
+	 * @param value
+	 * @param size
+	 * @return
+	 */
+	public static final String zeroPad(String value, int size) {
+		String s = "000000000000000000" + value;
+		return s.substring(s.length() - size);
+	}
+
+	/**
+	 * @param input
+	 * @return
+	 */
+	public static String doSHA256Hashing(String input) {
+
+		String output = null;
+		MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance("SHA-256");
+			byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+			output = Arrays.toString(hash);
+		} catch (NoSuchAlgorithmException e) {
+			logger.error("Exception while hashing with SHA256 : ", e);
+		}
+
+		return output;
+
+	}
+
+	/**
+	 * @param input
+	 * @return
+	 */
+	public static String doSHA512Hashing(String input) {
+
+		String output = null;
+		MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance("SHA-512");
+			byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+			output = Arrays.toString(hash);
+		} catch (NoSuchAlgorithmException e) {
+			logger.error("Exception while hashing with SHA256 : ", e);
+		}
+
+		return output;
+
+	}
+	
+	
+	/**
+	 * @param pushNotificationToken
+	 * @param mobileNo
+	 * @param strMsg
+	 * @param platform
+	 */
+	public static void testSendPushNotification(String pushNotificationToken, String mobileNo, String strMsg, String platform) {
+
+		if (pushNotificationToken.length() > 4) {
+			HttpClient client = HttpClientBuilder.create().build();
+			HttpPost post;
+			String url = "http://172.25.1.39:8080/TestNotification/Push"; // GlobalPropertyReader.getInstance().getValue(AppConstants.REQUEST_PUSH_NOTIFICATION_URL);
+
+			try {
+				if (platform.equalsIgnoreCase(AppConstants.REQUEST_KEY_PLATFORM_ANDRIOD)) {
+					platform = AppConstants.REQUEST_KEY_PLATFORM_ANDRIOD;
+				} else {
+					platform = AppConstants.REQUEST_KEY_PLATFORM_IOS;
+				}
+				String apiKey = "AIzaSyB52L9xUm5LbYxviuMmbNYYSz4s4vztj34"; // GlobalPropertyReader.getInstance().getValue(AppConstants.REQUEST_KEY_PUSH_APIKEY);
+				String envType = "dev"; // GlobalPropertyReader.getInstance().getValue(AppConstants.REQUEST_KEY_PUSH_ENVTYPE);
+				String certificateName = "DubaiFirstKeyCertificates.p12"; // GlobalPropertyReader.getInstance().getValue(AppConstants.REQUEST_KEY_PUSH_CERT_NAME);
+				String certificatePassword = "123456789"; // GlobalPropertyReader.getInstance().getValue(AppConstants.REQUEST_KEY_PUSH_CERT_PASSWORD);
+
+				url = url + "?token=" + pushNotificationToken + "&message=\'" + strMsg.replaceAll(" ", "%20") + "\'&" + platform.toLowerCase() + "="
+						+ platform + "&apiKey=" + apiKey + "&type=" + envType + "&certificateName=" + certificateName + "&certificatePassword="
+						+ certificatePassword;
+
+				post = new HttpPost(url);
+				post.setHeader(AppConstants.USER_AGENT, "Mozilla/5.0");
+				post.setHeader(AppConstants.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+				post.setHeader(AppConstants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+				HttpResponse response = client.execute(post);
+				
+				logger.info("response : " + response);
+
+				InputStreamReader streamReader = new InputStreamReader(response.getEntity().getContent());
+				BufferedReader rd = new BufferedReader(streamReader);
+
+				StringBuilder result = new StringBuilder();
+				String line;
+				while ((line = rd.readLine()) != null) {
+					result.append(line);
+				}
+				String res = result.toString();
+				
+			} catch (Exception e) {
+				logger.error("Exception in sendPushNotification() : ", e);
+			}
+		}
+	}
+
+	/**
+	 * @param pushNotificationToken
+	 * @param mobileNo
+	 * @param strMsg
+	 * @param platform
+	 */
+	public static void sendPushNotification(String pushNotificationToken, String mobileNo, String strMsg, String platform) {
+
+		try {
+			if (null != pushNotificationToken && pushNotificationToken.length() > 4) {
+				HttpClient client = HttpClientBuilder.create().build();
+				HttpPost post;
+				String url = GlobalPropertyReader.getInstance().getValue(AppConstants.REQUEST_PUSH_NOTIFICATION_URL);
+	
+					if (platform.equalsIgnoreCase(AppConstants.REQUEST_KEY_PLATFORM_ANDRIOD)) {
+						platform = AppConstants.REQUEST_KEY_PLATFORM_ANDRIOD;
+					} else {
+						platform = AppConstants.REQUEST_KEY_PLATFORM_IOS;
+					}
+					String apiKey = GlobalPropertyReader.getInstance().getValue(AppConstants.REQUEST_KEY_PUSH_APIKEY);
+					String envType = GlobalPropertyReader.getInstance().getValue(AppConstants.REQUEST_KEY_PUSH_ENVTYPE);
+					String certificateName = GlobalPropertyReader.getInstance().getValue(AppConstants.REQUEST_KEY_PUSH_CERT_NAME);
+					String certificatePassword = GlobalPropertyReader.getInstance().getValue(AppConstants.REQUEST_KEY_PUSH_CERT_PASSWORD);
+	
+					url = url + "?token=" + pushNotificationToken + "&message=\'" + strMsg.replaceAll(" ", "%20") + "\'&" + platform.toLowerCase() + "="
+							+ platform + "&apiKey=" + apiKey + "&type=" + envType + "&certificateName=" + certificateName + "&certificatePassword="
+							+ certificatePassword;
+	
+					post = new HttpPost(url);
+					post.setHeader(AppConstants.USER_AGENT, GlobalPropertyReader.getInstance().getValue(AppConstants.USER_AGENT_VALUE));
+					post.setHeader(AppConstants.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+					post.setHeader(AppConstants.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+	
+					HttpResponse response = client.execute(post);
+					
+					logger.info("response : " + response);
+	
+					InputStreamReader streamReader = new InputStreamReader(response.getEntity().getContent());
+					BufferedReader rd = new BufferedReader(streamReader);
+	
+					StringBuilder result = new StringBuilder();
+					String line;
+					while ((line = rd.readLine()) != null) {
+						result.append(line);
+					}
+					String res = result.toString();
+			}
+		} catch (Exception e) {
+			logger.error("Exception in sendPushNotification() : ", e);
+		}
+	}
+	
+	/**
+	 * @param input
+	 * @return
+	 * @throws Exception
+	 */
+	public static String encrpytString(String input) throws Exception {
+		return ObjectUtil.encryptNonAndroid(input, "p@DiTf61RAM$vp$");
+	}
+	
+	/**
+	 * @param input
+	 * @return
+	 * @throws Exception
+	 */
+	public static String decrpytString(String input) throws Exception {
+		return ObjectUtil
+				.decryptNonAndroidWithoutTild(input, "p@DiTf61RAM$vp$");
+	}
+	
+	/**
+	 * @param bigDecimal
+	 * @return
+	 */
+	public static BigDecimal getCommaAddedBigDecimal(BigDecimal bigDecimal){
+		
+		 DecimalFormat df = new DecimalFormat("#,##0.00");
+		 String strDecimal = df.format(bigDecimal);
+		 
+		 return new BigDecimal(strDecimal);
+	}
+	
+	/**
+	 * @param cardNo
+	 * @return
+	 */
+	public static String maskCardAccNo(String cardNo) {
+		String str1 = cardNo.substring(0, 4);
+		String str2 = cardNo.substring(cardNo.length() - 4);
+		int len = cardNo.substring(4, cardNo.length() - 4).length();
+		String s = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+				.substring(0, len);
+
+		return str1 + s + str2;
+	}
+}

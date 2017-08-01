@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item value="false" key="isRegEx"/>
+		<item value="getUserSessionDetails" key="selection"/>
+		<item value="false" key="casesensitive"/>
+		<item value="false" key="incremental"/>
+		<item value="true" key="wrap"/>
+		<item value="false" key="wholeword"/>
+		<list key="findhistory">
+			<item value="getUserSessionDetails"/>
+			<item value="requestKey"/>
+			<item value="getNewTransactionLogEntity"/>
+			<item value="JPAUtility"/>
+			<item value="generateKeyFromPasswordgenerateKeyFromPassword"/>
+			<item value="UserSessionsEntity"/>
+			<item value="getCustomerSessionDetails"/>
+			<item value="JSONUtil"/>
+		</list>
+		<list key="replacehistory">
+			<item value="JPAProvider"/>
+			<item value="UserSessionEntity"/>
+			<item value="JsonUtil"/>
+			<item value="CacheUtil"/>
+			<item value="PropertyReaderUtil"/>
+			<item value=""/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item value="260" key="DIALOG_WIDTH"/>
+		<item value="1|Segoe UI|9.0|0|WINDOWS|1|-24|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI" key="DIALOG_FONT_NAME"/>
+		<item value="370" key="DIALOG_HEIGHT"/>
+		<item value="516" key="DIALOG_X_ORIGIN"/>
+		<item value="105" key="DIALOG_Y_ORIGIN"/>
+	</section>
+</section>
